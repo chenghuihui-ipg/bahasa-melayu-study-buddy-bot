@@ -1,1216 +1,1225 @@
 <!DOCTYPE html>
 <html lang="ms">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Study Buddy Bot – Bahasa Melayu</title>
-  <style>
-    :root {
-      --bg: #eef3ff;
-      --panel: #ffffff;
-      --panel-soft: #f4f6ff;
-      --primary: #6d4ef6;
-      --primary-strong: #4d2fea;
-      --indigo: #4f46e5;
-      --blue: #60a5fa;
-      --sky: #dbeafe;
-      --mint: #dff7ec;
-      --text: #1f2a44;
-      --muted: #5e6d8a;
-      --shadow: 0 16px 36px rgba(93, 96, 181, 0.14);
-      --radius: 26px;
-      --radius-sm: 18px;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(180deg, #eef3ff 0%, #f9fbff 100%);
-      color: var(--text);
-    }
-
-    body {
-      display: flex;
-      justify-content: center;
-      padding: 24px 16px 40px;
-    }
-
-    .page-shell {
-      width: min(1200px, 100%);
-    }
-
-    .topbar {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
-      color: #fff;
-      border-radius: 28px 28px 18px 18px;
-      padding: 20px 24px;
-      box-shadow: var(--shadow);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-icon {
-      width: 52px;
-      height: 52px;
-      display: grid;
-      place-items: center;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.16);
-      font-size: 28px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
-    }
-
-    .brand-title {
-      font-size: clamp(1.2rem, 2vw, 1.6rem);
-      font-weight: 800;
-      letter-spacing: 0.02em;
-    }
-
-    .brand-subtitle {
-      font-size: 0.82rem;
-      opacity: 0.9;
-    }
-
-    .nav-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .nav-btn, .action-btn, .topic-card, .quiz-option, .ghost-btn, .chip {
-      border: none;
-      cursor: pointer;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-    }
-
-    .nav-btn {
-      background: rgba(255,255,255,0.14);
-      color: #fff;
-      padding: 10px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.92rem;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .nav-btn:hover, .action-btn:hover, .ghost-btn:hover, .chip:hover, .topic-card:hover, .quiz-option:hover {
-      transform: translateY(-1px);
-    }
-
-    .app-panel {
-      margin-top: 18px;
-      background: rgba(255,255,255,0.58);
-      border: 1px solid rgba(126, 146, 214, 0.18);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      backdrop-filter: blur(6px);
-    }
-
-    .screen {
-      display: none;
-      padding: 26px 22px 18px;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    .hero {
-      padding: 10px 8px 24px;
-    }
-
-    .hero h1 {
-      font-size: clamp(2rem, 4vw, 3.15rem);
-      margin: 8px 0 8px;
-      line-height: 1.1;
-      color: var(--primary-strong);
-      letter-spacing: 0.01em;
-    }
-
-    .subtitle {
-      font-size: clamp(1.05rem, 2vw, 1.35rem);
-      font-weight: 700;
-      color: var(--muted);
-      margin: 0 0 12px;
-    }
-
-    .welcome-box {
-      background: linear-gradient(135deg, rgba(109,78,246,0.1), rgba(96,165,250,0.12));
-      border-left: 6px solid var(--primary);
-      border-radius: 18px;
-      padding: 16px 18px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: var(--text);
-      box-shadow: 0 8px 18px rgba(109,78,246,0.08);
-    }
-
-    .topic-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    .topic-card {
-      position: relative;
-      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(236,242,255,0.98));
-      border: 1px solid rgba(148,163,184,0.16);
-      border-radius: var(--radius);
-      box-shadow: 0 10px 24px rgba(88, 104, 178, 0.08);
-      padding: 20px 18px 18px;
-      text-align: left;
-      min-height: 190px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .topic-card.selected {
-      background: linear-gradient(180deg, #f5f1ff 0%, #edf7ff 100%);
-      border-color: rgba(109,78,246,0.4);
-      box-shadow: 0 12px 26px rgba(109,78,246,0.14);
-    }
-
-    .topic-card:hover {
-      box-shadow: 0 16px 28px rgba(88, 104, 178, 0.12);
-    }
-
-    .topic-card-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .topic-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, #e9e2ff 0%, #d8ebff 100%);
-      display: grid;
-      place-items: center;
-      font-size: 1.7rem;
-      box-shadow: inset 0 0 0 1px rgba(109,78,246,0.08);
-    }
-
-    .topic-tag {
-      font-weight: 800;
-      font-size: 0.72rem;
-      padding: 7px 10px;
-      border-radius: 999px;
-      background: rgba(96,165,250,0.12);
-      color: var(--indigo);
-    }
-
-    .topic-card h3 {
-      margin: 18px 0 8px;
-      font-size: 1.25rem;
-      line-height: 1.2;
-      color: var(--text);
-    }
-
-    .topic-card p {
-      margin: 0;
-      line-height: 1.6;
-      color: var(--muted);
-      font-size: 0.94rem;
-    }
-
-    .topic-arrow {
-      font-size: 1.4rem;
-      color: var(--primary);
-      opacity: 0.9;
-    }
-
-    .topic-detail-card {
-      background: linear-gradient(180deg, #fff 0%, #f4f7ff 100%);
-      border: 1px solid rgba(130, 148, 205, 0.18);
-      border-radius: 30px;
-      padding: 22px;
-      box-shadow: 0 14px 30px rgba(90, 103, 171, 0.08);
-    }
-
-    .topic-banner {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: linear-gradient(135deg, rgba(109,78,246,0.1), rgba(96,165,250,0.1));
-      border-radius: 22px;
-      padding: 18px 20px;
-      margin-bottom: 18px;
-      border: 1px solid rgba(109,78,246,0.08);
-    }
-
-    .topic-banner .topic-icon {
-      width: 64px;
-      height: 64px;
-      font-size: 2.2rem;
-    }
-
-    .mini-label {
-      margin: 0;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      font-weight: 800;
-      color: var(--indigo);
-    }
-
-    .topic-banner h2 {
-      margin: 6px 0 0;
-      font-size: clamp(1.7rem, 3vw, 2.3rem);
-      color: var(--primary-strong);
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 18px;
-      margin-bottom: 20px;
-    }
-
-    .content-panel {
-      background: rgba(255,255,255,0.9);
-      border-radius: 24px;
-      border: 1px solid rgba(96,165,250,0.12);
-      padding: 18px 18px 14px;
-      min-height: 210px;
-    }
-
-    .content-panel h3 {
-      margin: 0 0 10px;
-      font-size: 1.18rem;
-      color: var(--primary-strong);
-    }
-
-    .content-panel p,
-    .content-panel li {
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 0.98rem;
-    }
-
-    .content-panel ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    .action-btn, .ghost-btn {
-      padding: 12px 18px;
-      border-radius: 999px;
-      font-size: 0.96rem;
-      font-weight: 700;
-      box-shadow: 0 10px 18px rgba(81, 93, 158, 0.1);
-    }
-
-    .action-btn.primary {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
-      color: #fff;
-    }
-
-    .action-btn.secondary {
-      background: linear-gradient(135deg, #edf4ff 0%, #e2ecff 100%);
-      color: var(--indigo);
-    }
-
-    .ghost-btn {
-      background: #fff;
-      color: var(--primary-strong);
-      border: 1px solid rgba(109,78,246,0.16);
-    }
-
-    .quiz-card {
-      background: linear-gradient(180deg, #fff 0%, #f4f7ff 100%);
-      border-radius: 28px;
-      border: 1px solid rgba(130, 148, 205, 0.18);
-      box-shadow: 0 16px 30px rgba(90, 103, 171, 0.08);
-      padding: 22px;
-      max-width: 820px;
-      margin: 0 auto;
-    }
-
-    .quiz-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 18px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 8px 12px;
-      background: rgba(109,78,246,0.12);
-      color: var(--primary-strong);
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 0.8rem;
-      letter-spacing: 0.03em;
-    }
-
-    .quiz-question {
-      font-size: clamp(1.5rem, 2.5vw, 2.2rem);
-      line-height: 1.4;
-      margin: 0 0 18px;
-      color: var(--text);
-    }
-
-    .quiz-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 12px;
-    }
-
-    .quiz-option {
-      background: #fff;
-      border: 1px solid rgba(148,163,184,0.3);
-      border-radius: 18px;
-      padding: 14px 16px;
-      text-align: left;
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      min-height: 82px;
-    }
-
-    .quiz-option .letter {
-      min-width: 34px;
-      height: 34px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #eef2ff 0%, #dfeafe 100%);
-      color: var(--primary-strong);
-      font-weight: 900;
-    }
-
-    .quiz-option.correct {
-      background: rgba(34,197,94,0.10);
-      border-color: rgba(34,197,94,0.38);
-    }
-
-    .quiz-option.wrong {
-      background: rgba(239,68,68,0.08);
-      border-color: rgba(239,68,68,0.28);
-    }
-
-    .quiz-option.disabled {
-      opacity: 0.9;
-      cursor: not-allowed;
-    }
-
-    .feedback {
-      min-height: 58px;
-      margin-top: 18px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(109,78,246,0.06);
-      color: var(--text);
-      font-weight: 600;
-      line-height: 1.6;
-      display: none;
-    }
-
-    .feedback.visible {
-      display: block;
-    }
-
-    .quiz-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .chat-panel {
-      margin-top: 20px;
-      background: rgba(255,255,255,0.7);
-      border: 1px solid rgba(126, 146, 214, 0.18);
-      box-shadow: var(--shadow);
-      border-radius: 28px;
-      overflow: hidden;
-    }
-
-    .chat-log {
-      min-height: 200px;
-      max-height: 360px;
-      overflow-y: auto;
-      padding: 18px 18px 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(244,246,255,0.85));
-    }
-
-    .msg {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      margin-bottom: 12px;
-      max-width: 86%;
-    }
-
-    .msg.user {
-      margin-left: auto;
-      flex-direction: row-reverse;
-    }
-
-    .msg-avatar {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #6d4ef6 0%, #4f46e5 100%);
-      color: #fff;
-      font-size: 1rem;
-      flex-shrink: 0;
-    }
-
-    .msg.user .msg-avatar {
-      background: linear-gradient(135deg, #7f9ef9 0%, #5b7ae6 100%);
-    }
-
-    .bubble {
-      background: #fff;
-      border-radius: 18px 18px 18px 6px;
-      border: 1px solid rgba(148,163,184,0.15);
-      box-shadow: 0 10px 20px rgba(109,78,246,0.06);
-      padding: 12px 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: var(--text);
-      font-size: 0.96rem;
-    }
-
-    .msg.user .bubble {
-      background: linear-gradient(135deg, #5c67f7 0%, #4a55d8 100%);
-      border: none;
-      color: #fff;
-      border-radius: 18px 18px 6px 18px;
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      padding: 0 18px 12px;
-    }
-
-    .chip {
-      background: #edf3ff;
-      color: var(--indigo);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-weight: 700;
-      border: 1px solid rgba(79,70,229,0.1);
-    }
-
-    .input-bar {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      padding: 12px 18px 18px;
-      background: rgba(255,255,255,0.65);
-      border-top: 1px solid rgba(148,163,184,0.18);
-    }
-
-    textarea {
-      flex: 1;
-      min-height: 48px;
-      max-height: 120px;
-      resize: vertical;
-      border: 1px solid rgba(148,163,184,0.4);
-      border-radius: 18px;
-      padding: 12px 14px;
-      font: inherit;
-      color: var(--text);
-      background: #fff;
-      outline: none;
-    }
-
-    textarea:focus {
-      border-color: rgba(109,78,246,0.7);
-      box-shadow: 0 0 0 4px rgba(109,78,246,0.08);
-    }
-
-    .send-btn {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
-      color: #fff;
-      font-size: 1.35rem;
-      cursor: pointer;
-      box-shadow: 0 10px 18px rgba(109,78,246,0.18);
-    }
-
-    @media (max-width: 1000px) {
-      .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .detail-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 14px 12px 34px; }
-      .topbar { border-radius: 22px; padding: 16px 18px; }
-      .nav-actions { width: 100%; }
-      .nav-btn { flex: 1; min-width: 110px; }
-      .topic-grid { grid-template-columns: 1fr; }
-      .quiz-options { grid-template-columns: 1fr; }
-      .app-panel { border-radius: 22px; }
-      .screen { padding: 18px 16px 12px; }
-      .content-panel { min-height: auto; }
-    }
-  </style>
-</head>
-<body>
-  <div class="page-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-icon">📚</div>
-        <div>
-          <div class="brand-title">Study Buddy Bot</div>
-          <div class="brand-subtitle">Bahasa Melayu • Tahun 1 – 6</div>
-        </div>
-      </div>
-
-      <nav class="nav-actions" aria-label="Navigasi utama">
-        <button class="nav-btn" data-action="menu">Menu Utama</button>
-        <button class="nav-btn" data-action="topics">Pilih Tajuk</button>
-        <button class="nav-btn" data-action="back">Kembali</button>
-      </nav>
-    </header>
-
-    <main class="app-panel">
-      <section id="menu-screen" class="screen active" aria-label="Menu utama">
-        <div class="hero">
-          <h1>📚 JOM BELAJAR BAHASA MELAYU!</h1>
-          <p class="subtitle">Pilih tajuk yang ingin kamu pelajari.</p>
-          <div class="welcome-box">Hai! Selamat datang ke Study Buddy Bot. 😊 Pilih tajuk di bawah untuk mula belajar!</div>
-        </div>
-        <div id="topic-grid" class="topic-grid" aria-live="polite"></div>
-      </section>
-
-      <section id="topic-screen" class="screen" aria-label="Paparan topik">
-        <div class="topic-detail-card">
-          <div class="topic-banner">
-            <div id="detail-icon" class="topic-icon">📘</div>
-            <div>
-              <p class="mini-label">Topik semasa</p>
-              <h2 id="detail-title">Tatabahasa</h2>
-            </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study Buddy Bot – Bahasa Melayu</title>
+    <style>
+      :root {
+        --primary: #6d4ef6;
+        --primary-strong: #4d2fea;
+        --indigo: #4f46e5;
+        --blue: #60a5fa;
+        --sky: #dbeafe;
+        --bg: #eef3ff;
+        --panel: #ffffff;
+        --text: #1f2a44;
+        --muted: #5e6d8a;
+        --shadow: 0 16px 36px rgba(93, 96, 181, 0.14);
+        --radius: 26px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #eef3ff 0%, #f9fbff 100%);
+        color: var(--text);
+      }
+
+      body {
+        display: flex;
+        justify-content: center;
+        padding: 24px 16px 40px;
+      }
+
+      .page-shell {
+        width: min(1200px, 100%);
+      }
+
+      .topbar {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
+        color: #fff;
+        border-radius: 28px 28px 18px 18px;
+        padding: 20px 24px;
+        box-shadow: var(--shadow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-icon {
+        width: 52px;
+        height: 52px;
+        display: grid;
+        place-items: center;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.16);
+        font-size: 28px;
+      }
+
+      .brand-title {
+        font-size: clamp(1.2rem, 2vw, 1.6rem);
+        font-weight: 800;
+      }
+
+      .brand-subtitle {
+        font-size: 0.82rem;
+        opacity: 0.9;
+      }
+
+      .nav-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .nav-btn, .action-btn, .topic-card, .quiz-option, .ghost-btn, .chip, .send-btn {
+        border: none;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .nav-btn {
+        background: rgba(255,255,255,0.14);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: 700;
+        border: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .nav-btn:hover, .action-btn:hover, .ghost-btn:hover, .topic-card:hover, .quiz-option:hover, .chip:hover, .send-btn:hover {
+        transform: translateY(-1px);
+      }
+
+      .app-panel {
+        margin-top: 18px;
+        background: rgba(255,255,255,0.58);
+        border: 1px solid rgba(126, 146, 214, 0.18);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .screen {
+        display: none;
+        padding: 26px 22px 18px;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .hero {
+        padding: 10px 8px 24px;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 4vw, 3.15rem);
+        margin: 8px 0 8px;
+        line-height: 1.1;
+        color: var(--primary-strong);
+      }
+
+      .subtitle {
+        font-size: clamp(1.05rem, 2vw, 1.35rem);
+        font-weight: 700;
+        color: var(--muted);
+        margin: 0 0 12px;
+      }
+
+      .welcome-box {
+        background: linear-gradient(135deg, rgba(109,78,246,0.1), rgba(96,165,250,0.12));
+        border-left: 6px solid var(--primary);
+        border-radius: 18px;
+        padding: 16px 18px;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text);
+        box-shadow: 0 8px 18px rgba(109,78,246,0.08);
+      }
+
+      .topic-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 18px;
+      }
+
+      .topic-card {
+        position: relative;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(236,242,255,0.98));
+        border: 1px solid rgba(148,163,184,0.16);
+        border-radius: var(--radius);
+        box-shadow: 0 10px 24px rgba(88, 104, 178, 0.08);
+        padding: 20px 18px 18px;
+        text-align: left;
+        min-height: 190px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .topic-card.selected {
+        background: linear-gradient(180deg, #f5f1ff 0%, #edf7ff 100%);
+        border-color: rgba(109,78,246,0.4);
+        box-shadow: 0 12px 26px rgba(109,78,246,0.14);
+      }
+
+      .topic-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .topic-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #e9e2ff 0%, #d8ebff 100%);
+        display: grid;
+        place-items: center;
+        font-size: 1.7rem;
+      }
+
+      .topic-tag {
+        font-weight: 800;
+        font-size: 0.72rem;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(96,165,250,0.12);
+        color: var(--indigo);
+      }
+
+      .topic-card h3 {
+        margin: 18px 0 8px;
+        font-size: 1.25rem;
+        line-height: 1.2;
+      }
+
+      .topic-card p {
+        margin: 0;
+        line-height: 1.6;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .topic-arrow {
+        font-size: 1.4rem;
+        color: var(--primary);
+      }
+
+      .topic-detail-card {
+        background: linear-gradient(180deg, #fff 0%, #f4f7ff 100%);
+        border: 1px solid rgba(130, 148, 205, 0.18);
+        border-radius: 30px;
+        padding: 22px;
+        box-shadow: 0 14px 30px rgba(90, 103, 171, 0.08);
+      }
+
+      .topic-banner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: linear-gradient(135deg, rgba(109,78,246,0.1), rgba(96,165,250,0.1));
+        border-radius: 22px;
+        padding: 18px 20px;
+        margin-bottom: 18px;
+        border: 1px solid rgba(109,78,246,0.08);
+      }
+
+      .topic-banner .topic-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 2.2rem;
+      }
+
+      .mini-label {
+        margin: 0;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: var(--indigo);
+      }
+
+      .topic-banner h2 {
+        margin: 6px 0 0;
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        color: var(--primary-strong);
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+        margin-bottom: 20px;
+      }
+
+      .content-panel {
+        background: rgba(255,255,255,0.9);
+        border-radius: 24px;
+        border: 1px solid rgba(96,165,250,0.12);
+        padding: 18px 18px 14px;
+        min-height: 210px;
+      }
+
+      .content-panel h3 {
+        margin: 0 0 10px;
+        font-size: 1.18rem;
+        color: var(--primary-strong);
+      }
+
+      .content-panel p,
+      .content-panel li {
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.98rem;
+      }
+
+      .content-panel ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+      }
+
+      .action-btn, .ghost-btn {
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 0.96rem;
+        font-weight: 700;
+        box-shadow: 0 10px 18px rgba(81, 93, 158, 0.1);
+      }
+
+      .action-btn.primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
+        color: #fff;
+      }
+
+      .action-btn.secondary {
+        background: linear-gradient(135deg, #edf4ff 0%, #e2ecff 100%);
+        color: var(--indigo);
+      }
+
+      .ghost-btn {
+        background: #fff;
+        color: var(--primary-strong);
+        border: 1px solid rgba(109,78,246,0.16);
+      }
+
+      .quiz-card {
+        background: linear-gradient(180deg, #fff 0%, #f4f7ff 100%);
+        border-radius: 28px;
+        border: 1px solid rgba(130, 148, 205, 0.18);
+        box-shadow: 0 16px 30px rgba(90, 103, 171, 0.08);
+        padding: 22px;
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      .quiz-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(109,78,246,0.12);
+        color: var(--primary-strong);
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 0.8rem;
+      }
+
+      .quiz-question {
+        font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+        line-height: 1.4;
+        margin: 0 0 18px;
+      }
+
+      .quiz-options {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .quiz-option {
+        background: #fff;
+        border: 1px solid rgba(148,163,184,0.3);
+        border-radius: 18px;
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        min-height: 82px;
+      }
+
+      .quiz-option .letter {
+        min-width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #eef2ff 0%, #dfeafe 100%);
+        color: var(--primary-strong);
+        font-weight: 900;
+      }
+
+      .quiz-option.correct {
+        background: rgba(34,197,94,0.10);
+        border-color: rgba(34,197,94,0.38);
+      }
+
+      .quiz-option.wrong {
+        background: rgba(239,68,68,0.08);
+        border-color: rgba(239,68,68,0.28);
+      }
+
+      .feedback {
+        min-height: 58px;
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(109,78,246,0.06);
+        color: var(--text);
+        font-weight: 600;
+        line-height: 1.6;
+        display: none;
+      }
+
+      .feedback.visible {
+        display: block;
+      }
+
+      .quiz-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .chat-panel {
+        margin-top: 20px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(126, 146, 214, 0.18);
+        box-shadow: var(--shadow);
+        border-radius: 28px;
+        overflow: hidden;
+      }
+
+      .chat-log {
+        min-height: 200px;
+        max-height: 360px;
+        overflow-y: auto;
+        padding: 18px 18px 12px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(244,246,255,0.85));
+      }
+
+      .msg {
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        margin-bottom: 12px;
+        max-width: 86%;
+      }
+
+      .msg.user {
+        margin-left: auto;
+        flex-direction: row-reverse;
+      }
+
+      .msg-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #6d4ef6 0%, #4f46e5 100%);
+        color: #fff;
+        font-size: 1rem;
+      }
+
+      .msg.user .msg-avatar {
+        background: linear-gradient(135deg, #7f9ef9 0%, #5b7ae6 100%);
+      }
+
+      .bubble {
+        background: #fff;
+        border-radius: 18px 18px 18px 6px;
+        border: 1px solid rgba(148,163,184,0.15);
+        box-shadow: 0 10px 20px rgba(109,78,246,0.06);
+        padding: 12px 14px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text);
+        font-size: 0.96rem;
+      }
+
+      .msg.user .bubble {
+        background: linear-gradient(135deg, #5c67f7 0%, #4a55d8 100%);
+        border: none;
+        color: #fff;
+        border-radius: 18px 18px 6px 18px;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 0 18px 12px;
+      }
+
+      .chip {
+        background: #edf3ff;
+        color: var(--indigo);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-weight: 700;
+        border: 1px solid rgba(79,70,229,0.1);
+      }
+
+      .input-bar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 18px 18px;
+        background: rgba(255,255,255,0.65);
+        border-top: 1px solid rgba(148,163,184,0.18);
+      }
+
+      textarea {
+        flex: 1;
+        min-height: 48px;
+        max-height: 120px;
+        resize: vertical;
+        border: 1px solid rgba(148,163,184,0.4);
+        border-radius: 18px;
+        padding: 12px 14px;
+        font: inherit;
+        color: var(--text);
+        background: #fff;
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: rgba(109,78,246,0.7);
+        box-shadow: 0 0 0 4px rgba(109,78,246,0.08);
+      }
+
+      .send-btn {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--indigo) 100%);
+        color: #fff;
+        font-size: 1.35rem;
+        box-shadow: 0 10px 18px rgba(109,78,246,0.18);
+      }
+
+      @media (max-width: 1000px) {
+        .topic-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .detail-grid { grid-template-columns: 1fr; }
+      }
+
+      @media (max-width: 640px) {
+        body { padding: 14px 12px 34px; }
+        .topbar { border-radius: 22px; padding: 16px 18px; }
+        .nav-actions { width: 100%; }
+        .nav-btn { flex: 1; min-width: 110px; }
+        .topic-grid { grid-template-columns: 1fr; }
+        .quiz-options { grid-template-columns: 1fr; }
+        .app-panel { border-radius: 22px; }
+        .screen { padding: 18px 16px 12px; }
+        .content-panel { min-height: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-icon">📚</div>
+          <div>
+            <div class="brand-title">Study Buddy Bot</div>
+            <div class="brand-subtitle">Bahasa Melayu • Tahun 1 – 6</div>
           </div>
+        </div>
 
-          <div class="detail-grid">
-            <div class="content-panel">
-              <h3 id="detail-panel-title">Nota Ringkas</h3>
-              <div id="detail-panel-content"></div>
+        <nav class="nav-actions" aria-label="Navigasi utama">
+          <button class="nav-btn" data-action="menu">Menu Utama</button>
+          <button class="nav-btn" data-action="topics">Pilih Tajuk</button>
+          <button class="nav-btn" data-action="back">Kembali</button>
+        </nav>
+      </header>
+
+      <main class="app-panel">
+        <section id="menu-screen" class="screen active" aria-label="Menu utama">
+          <div class="hero">
+            <h1>📚 JOM BELAJAR BAHASA MELAYU!</h1>
+            <p class="subtitle">Pilih tajuk yang ingin kamu pelajari.</p>
+            <div class="welcome-box">Hai! Selamat datang ke Study Buddy Bot. 😊 Pilih tajuk di bawah untuk mula belajar!</div>
+          </div>
+          <div id="topic-grid" class="topic-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="topic-screen" class="screen" aria-label="Paparan topik">
+          <div class="topic-detail-card">
+            <div class="topic-banner">
+              <div id="detail-icon" class="topic-icon">📘</div>
+              <div>
+                <p class="mini-label">Topik semasa</p>
+                <h2 id="detail-title">Tatabahasa</h2>
+              </div>
             </div>
 
-            <div class="content-panel">
-              <h3>Contoh Lain</h3>
-              <ul id="detail-examples"></ul>
+            <div class="detail-grid">
+              <div class="content-panel">
+                <h3 id="detail-panel-title">Nota Ringkas</h3>
+                <div id="detail-panel-content"></div>
+              </div>
+
+              <div class="content-panel">
+                <h3>Contoh Lain</h3>
+                <ul id="detail-examples"></ul>
+              </div>
+            </div>
+
+            <div class="toolbar" aria-label="Tindakan topik">
+              <button class="action-btn primary" data-action="note">Nota Ringkas</button>
+              <button class="action-btn secondary" data-action="examples">Contoh Lain</button>
+              <button class="action-btn secondary" data-action="practice">Latihan</button>
+              <button class="action-btn secondary" data-action="quiz">Kuiz</button>
+              <button class="ghost-btn" data-action="menu">Kembali ke Menu</button>
             </div>
           </div>
+        </section>
 
-          <div class="toolbar" aria-label="Tindakan topik">
-            <button class="action-btn primary" data-action="note">Nota Ringkas</button>
-            <button class="action-btn secondary" data-action="examples">Contoh Lain</button>
-            <button class="action-btn secondary" data-action="practice">Latihan</button>
-            <button class="action-btn secondary" data-action="quiz">Kuiz</button>
-            <button class="ghost-btn" data-action="menu">Kembali ke Menu</button>
+        <section id="quiz-topics-screen" class="screen" aria-label="Pilihan kuiz">
+          <div class="hero">
+            <h1>Pilih Topik Kuiz</h1>
+            <p class="subtitle">Pilih tajuk kuiz yang ingin kamu jawab.</p>
           </div>
+          <div id="quiz-topic-grid" class="topic-grid"></div>
+        </section>
+
+        <section id="quiz-screen" class="screen" aria-label="Kuiz">
+          <div class="quiz-card">
+            <div class="quiz-meta">
+              <span id="quiz-badge" class="badge">Kuiz</span>
+              <span id="quiz-counter" class="badge">Soalan 1/5</span>
+            </div>
+
+            <h2 id="quiz-question" class="quiz-question">Soalan kuiz akan dipaparkan di sini.</h2>
+            <div id="quiz-options" class="quiz-options"></div>
+            <div id="quiz-feedback" class="feedback" aria-live="polite"></div>
+
+            <div class="quiz-actions">
+              <button id="next-question-btn" class="action-btn primary hidden" data-action="next-question">Soalan Seterusnya</button>
+              <button id="retry-quiz-btn" class="action-btn secondary hidden" data-action="retry-quiz">Cuba Lagi</button>
+              <button id="pick-topic-btn" class="action-btn secondary hidden" data-action="topics">Pilih Tajuk Lain</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <section class="chat-panel" aria-label="Chatbot">
+        <div id="chat-log" class="chat-log"></div>
+        <div id="chips-bar" class="chips" aria-live="polite"></div>
+        <div class="input-bar">
+          <textarea id="user-input" rows="1" placeholder="Taip soalan atau topik Bahasa Melayu..." aria-label="Taip soalan"></textarea>
+          <button id="send-btn" class="send-btn" aria-label="Hantar">➤</button>
         </div>
       </section>
+    </div>
 
-      <section id="quiz-topics-screen" class="screen" aria-label="Pilihan kuiz">
-        <div class="hero">
-          <h1>Pilih Topik Kuiz</h1>
-          <p class="subtitle">Pilih tajuk kuiz yang ingin kamu jawab.</p>
-        </div>
-        <div id="quiz-topic-grid" class="topic-grid"></div>
-      </section>
+    <script src="brain.js"></script>
+    <script>
+      (function () {
+        "use strict";
 
-      <section id="quiz-screen" class="screen" aria-label="Kuiz">
-        <div class="quiz-card">
-          <div class="quiz-meta">
-            <span id="quiz-badge" class="badge">Kuiz</span>
-            <span id="quiz-counter" class="badge">Soalan 1/5</span>
-          </div>
+        const TOPICS = [
+          { key: "tatabahasa", icon: "📝", tag: "Asas", description: "Peraturan asas ayat dan penggunaan bahasa yang betul." },
+          { key: "kata-nama-am-khas", icon: "🏷️", tag: "Nama", description: "Kenali benda umum serta nama khas yang ditulis dengan huruf besar." },
+          { key: "kata-ganti-nama-diri", icon: "🧑", tag: "Diri", description: "Belajar menggantikan nama orang dengan kata ganti yang tepat." },
+          { key: "kata-kerja", icon: "🏃", tag: "Tindakan", description: "Perkataan yang menunjukkan perbuatan, proses atau keadaan." },
+          { key: "kata-adjektif", icon: "✨", tag: "Sifat", description: "Menerangkan ciri, warna, bentuk atau keadaan sesuatu." },
+          { key: "kosa-kata", icon: "📖", tag: "Kosa", description: "Tambah perkataan baru untuk menjadikan ayat lebih menarik." },
+          { key: "binaan-ayat", icon: "🧩", tag: "Ayat", description: "Susun subjek, predikat dan objek dengan betul." },
+          { key: "pemahaman", icon: "💡", tag: "Minda", description: "Fahami isi cerita dan jawab soalan berdasarkan petikan." }
+        ];
 
-          <h2 id="quiz-question" class="quiz-question">Soalan kuiz akan dipaparkan di sini.</h2>
-          <div id="quiz-options" class="quiz-options"></div>
-          <div id="quiz-feedback" class="feedback" aria-live="polite"></div>
-
-          <div class="quiz-actions">
-            <button id="next-question-btn" class="action-btn primary hidden" data-action="next-question">Soalan Seterusnya</button>
-            <button id="retry-quiz-btn" class="action-btn secondary hidden" data-action="retry-quiz">Cuba Lagi</button>
-            <button id="pick-topic-btn" class="action-btn secondary hidden" data-action="topics">Pilih Tajuk Lain</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <section class="chat-panel" aria-label="Chatbot">
-      <div id="chat-log" class="chat-log"></div>
-      <div id="chips-bar" class="chips" aria-live="polite"></div>
-      <div class="input-bar">
-        <textarea id="user-input" rows="1" placeholder="Taip soalan atau topik Bahasa Melayu..." aria-label="Taip soalan"></textarea>
-        <button id="send-btn" class="send-btn" aria-label="Hantar">➤</button>
-      </div>
-    </section>
-  </div>
-
-  <script src="brain.js"></script>
-  <script>
-    (function () {
-      "use strict";
-
-      const DEFAULT_TOPICS = [
-        {
-          key: "tatabahasa",
-          icon: "📝",
-          tag: "Asas",
-          description: "Peraturan asas ayat dan penggunaan bahasa yang betul."
-        },
-        {
-          key: "kata-nama-am-khas",
-          icon: "🏷️",
-          tag: "Nama",
-          description: "Kenali benda umum serta nama khas yang ditulis dengan huruf besar."
-        },
-        {
-          key: "kata-ganti-nama-diri",
-          icon: "🧑",
-          tag: "Diri",
-          description: "Belajar menggantikan nama orang dengan kata ganti yang tepat."
-        },
-        {
-          key: "kata-kerja",
-          icon: "🏃",
-          tag: "Tindakan",
-          description: "Perkataan yang menunjukkan perbuatan, proses atau keadaan."
-        },
-        {
-          key: "kata-adjektif",
-          icon: "✨",
-          tag: "Sifat",
-          description: "Menerangkan ciri, warna, bentuk atau keadaan sesuatu."
-        },
-        {
-          key: "kosa-kata",
-          icon: "📖",
-          tag: "Kosa",
-          description: "Tambah perkataan baru untuk menjadikan ayat lebih menarik."
-        },
-        {
-          key: "binaan-ayat",
-          icon: "🧩",
-          tag: "Ayat",
-          description: "Susun subjek, predikat dan objek dengan betul."
-        },
-        {
-          key: "pemahaman",
-          icon: "💡",
-          tag: "Minda",
-          description: "Fahami isi cerita dan jawab soalan berdasarkan petikan."
-        }
-      ];
-
-      const screenMap = {
-        menu: document.getElementById("menu-screen"),
-        topic: document.getElementById("topic-screen"),
-        quizTopics: document.getElementById("quiz-topics-screen"),
-        quiz: document.getElementById("quiz-screen")
-      };
-
-      const topicGrid = document.getElementById("topic-grid");
-      const quizTopicGrid = document.getElementById("quiz-topic-grid");
-      const detailIcon = document.getElementById("detail-icon");
-      const detailTitle = document.getElementById("detail-title");
-      const detailPanelTitle = document.getElementById("detail-panel-title");
-      const detailPanelContent = document.getElementById("detail-panel-content");
-      const detailExamples = document.getElementById("detail-examples");
-      const quizQuestionEl = document.getElementById("quiz-question");
-      const quizOptionsEl = document.getElementById("quiz-options");
-      const quizFeedbackEl = document.getElementById("quiz-feedback");
-      const nextQuestionBtn = document.getElementById("next-question-btn");
-      const retryQuizBtn = document.getElementById("retry-quiz-btn");
-      const pickTopicBtn = document.getElementById("pick-topic-btn");
-      const quizCounterEl = document.getElementById("quiz-counter");
-      const quizBadgeEl = document.getElementById("quiz-badge");
-
-      const log = document.getElementById("chat-log");
-      const chipsBar = document.getElementById("chips-bar");
-      const input = document.getElementById("user-input");
-      const sendBtn = document.getElementById("send-btn");
-
-      let session = StudyBuddyBrain.createSession();
-      let currentTopicKey = null;
-      let currentScreen = "menu";
-      let activeQuizTopic = null;
-      let quizQuestions = [];
-      let quizIndex = 0;
-      let quizScore = 0;
-      let answeredCurrentQuestion = false;
-
-      const CHIP_IDLE = ["Kata Nama", "Kata Kerja", "Kata Adjektif", "Kata Ganti Nama", "Binaan Ayat", "Kosa Kata", "Pemahaman", "Tatabahasa"];
-      const CHIP_TOPIC = ["Nota Ringkas", "Contoh Lain", "Latihan", "Kuiz", "Menu"];
-      const CHIP_QUIZ = ["A", "B", "C", "D", "Berhenti"];
-      const CHIP_PRACTICE = ["Soalan Seterusnya", "Terangkan", "Berhenti"];
-
-      function setChips(arr) {
-        chipsBar.innerHTML = "";
-        arr.forEach((label) => {
-          const btn = document.createElement("button");
-          btn.className = "chip";
-          btn.textContent = label;
-          btn.addEventListener("click", () => sendMessage(label));
-          chipsBar.appendChild(btn);
-        });
-      }
-
-      function renderBubble(text, from) {
-        const wrap = document.createElement("div");
-        wrap.className = `msg ${from}`;
-
-        const avatar = document.createElement("div");
-        avatar.className = "msg-avatar";
-        avatar.textContent = from === "bot" ? "🤖" : "👤";
-
-        const bubble = document.createElement("div");
-        bubble.className = "bubble";
-        bubble.innerHTML = formatMarkdown(text);
-
-        wrap.appendChild(avatar);
-        wrap.appendChild(bubble);
-        log.appendChild(wrap);
-        log.scrollTop = log.scrollHeight;
-      }
-
-      function formatMarkdown(text) {
-        text = String(text || "");
-        text = text.replace(/\*([^*\n]+)\*/g, "<strong>$1</strong>");
-        text = text.replace(/_([^_\n]+)_/g, "<em>$1</em>");
-        return text;
-      }
-
-      function showTyping() {
-        const wrap = document.createElement("div");
-        wrap.className = "msg bot";
-        wrap.id = "typing-indicator";
-
-        const avatar = document.createElement("div");
-        avatar.className = "msg-avatar";
-        avatar.textContent = "🤖";
-
-        const bubble = document.createElement("div");
-        bubble.className = "bubble";
-        bubble.innerHTML = "<span>•</span><span>•</span><span>•</span>";
-        bubble.style.display = "flex";
-        bubble.style.gap = "6px";
-        bubble.style.alignItems = "center";
-        bubble.style.minWidth = "70px";
-        bubble.innerHTML = "<span style=\"display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af;animation:bounce 0.9s infinite;\"></span><span style=\"display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af;animation:bounce 0.9s infinite;animation-delay:0.15s;\"></span><span style=\"display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af;animation:bounce 0.9s infinite;animation-delay:0.3s;\"></span>";
-
-        wrap.appendChild(avatar);
-        wrap.appendChild(bubble);
-        log.appendChild(wrap);
-        log.scrollTop = log.scrollHeight;
-      }
-
-      function hideTyping() {
-        const el = document.getElementById("typing-indicator");
-        if (el) el.remove();
-      }
-
-      function getTopicMeta(key) {
-        const fallback = DEFAULT_TOPICS.find((item) => item.key === key) || DEFAULT_TOPICS[0];
-        const topic = StudyBuddyBrain.KB[key] || StudyBuddyBrain.TOPICS.find((item) => item.key === key) || fallback;
-        return {
-          key,
-          title: topic.label || fallback.title || "Topik",
-          icon: fallback.icon || "📘",
-          description: topic.explanation || fallback.description || "Topik pembelajaran Bahasa Melayu.",
-          examples: topic.examples || ["Contoh akan dipaparkan di sini."],
-          practice: topic.practice || ["Bina satu ayat berdasarkan topik ini.", "Cuba jawab soalan berikut."]
+        const TOPIC_DETAILS = {
+          tatabahasa: {
+            notes: "Tatabahasa ialah peraturan penggunaan bahasa yang membantu kita membina ayat dengan betul, jelas dan gramatis.",
+            examples: ["Ali membaca buku di perpustakaan.", "Ibu memasak nasi dengan berhati-hati.", "Kamu mesti menulis ayat dengan tanda baca yang betul." ],
+            practice: ["Bina satu ayat yang lengkap dengan subjek dan predikat.", "Tuliskan dua ayat dengan tanda baca yang betul.", "Nyatakan perbezaan antara ayat yang betul dan tidak betul."]
+          },
+          "kata-nama-am-khas": {
+            notes: "Kata nama am merujuk kepada benda, orang, tempat atau haiwan secara umum. Kata nama khas merujuk kepada nama tertentu seperti nama orang, tempat, atau institusi dan biasanya ditulis dengan huruf besar.",
+            examples: ["Kata nama am: buku, sekolah, ikan, guru.", "Kata nama khas: Ali, Kuala Lumpur, Malaysia, Puan Salmah."],
+            practice: ["Senaraikan lima kata nama am yang ada di sekolah.", "Tulis tiga kata nama khas untuk nama orang.", "Bezakan kata nama am dan kata nama khas dalam dua ayat."]
+          },
+          "kata-ganti-nama-diri": {
+            notes: "Kata ganti nama diri menggantikan nama orang supaya ayat lebih ringkas dan lancar. Contohnya saya, awak, dia, kami, kamu, mereka.",
+            examples: ["Saya pergi ke sekolah setiap hari.", "Dia suka membaca buku cerita.", "Kami menyiapkan kerja rumah bersama-sama."],
+            practice: ["Tukarkan nama orang kepada kata ganti nama diri yang sesuai.", "Bina ayat menggunakan 'kamu' dan 'kami'.", "Nyatakan satu ayat yang menggunakan kata ganti nama diri orang ketiga."]
+          },
+          "kata-kerja": {
+            notes: "Kata kerja ialah perkataan yang menunjukkan perbuatan, proses atau keadaan. Contohnya membaca, menulis, berjalan, menangis, dan tertidur.",
+            examples: ["Ali membaca buku di perpustakaan.", "Ibu memasak nasi untuk keluarga.", "Adik sedang tidur dengan lena."],
+            practice: ["Tuliskan lima kata kerja yang biasa anda lakukan di sekolah.", "Bina ayat yang menggunakan kata kerja 'melukis'.", "Kenal pasti kata kerja dalam ayat yang diberikan."]
+          },
+          "kata-adjektif": {
+            notes: "Kata adjektif menerangkan sifat atau keadaan sesuatu benda, orang, atau haiwan. Ia boleh menggambarkan warna, bentuk, saiz, keadaan, atau ciri lain.",
+            examples: ["Rumah itu besar dan cantik.", "Baju itu berwarna biru.", "Kucing itu comel dan aktif."],
+            practice: ["Berikan lima kata adjektif yang menggambarkan keadaan cuaca.", "Tulis ayat menggunakan kata adjektif 'cerdas'.", "Nyatakan kata adjektif dalam satu ayat yang anda tulis."]
+          },
+          "kosa-kata": {
+            notes: "Kosa kata ialah himpunan perkataan yang kita faham dan gunakan dalam komunikasi harian. Memperkaya kosa kata membantu kita bercakap dan menulis dengan lebih berkesan.",
+            examples: ["gembira, tenang, semangat, berhati-hati, bersih.", "Saya berasa gembira apabila mendapat markah yang baik.", "Kita perlu menjaga kebersihan kelas."],
+            practice: ["Senaraikan sepuluh perkataan yang berkaitan dengan sekolah.", "Bina ayat menggunakan perkataan 'semangat'.", "Tulis ayat yang menggambarkan perasaan anda di hari pertama sekolah."]
+          },
+          "binaan-ayat": {
+            notes: "Binaan ayat melibatkan susunan subjek, predikat, dan objek agar ayat menjadi lengkap dan gramatis. Subjek ialah pelaku, predikat ialah perbuatan, dan objek ialah benda yang terlibat.",
+            examples: ["Subjek: Ali. Predikat: membaca buku. Objek: buku.", "Ali membaca buku di perpustakaan.", "Syafiq menyelesaikan kerja rumah dengan tenang."],
+            practice: ["Bina ayat dengan subjek dan predikat yang betul.", "Susun perkataan berikut supaya menjadi ayat yang betul.", "Nyatakan tiga komponen utama dalam binaan ayat."]
+          },
+          pemahaman: {
+            notes: "Pemahaman melibatkan membaca petikan dengan teliti, mengenal pasti idea utama, dan menjawab soalan berdasarkan maklumat yang diberikan.",
+            examples: ["Baca petikan dengan teliti dan cari idea utama.", "Kenal pasti watak utama dan peristiwa penting.", "Jawab soalan berdasarkan maklumat dalam petikan."],
+            practice: ["Baca petikan ringkas dan jelaskan maksud utama.", "Nyatakan satu idea utama daripada cerita pendek.", "Jawab soalan tentang tindakan watak utama dalam petikan."]
+          }
         };
-      }
 
-      function getTopicLabel(key) {
-        const meta = getTopicMeta(key);
-        if (key === "kata-nama-am-khas") return "Kata Nama Am dan Kata Nama Khas";
-        if (meta.title && meta.title.includes("&")) return meta.title.replace("&", "dan");
-        return meta.title;
-      }
+        const QUIZ_BANKS = {
+          tatabahasa: [
+            { question: "Apakah yang perlu diberi perhatian dalam tatabahasa supaya ayat menjadi gramatis?", options: { A: "Membaca sahaja", B: "Penggunaan huruf besar, tanda baca, dan susunan ayat", C: "Jumlah halaman", D: "Warna buku" }, correctAnswer: "B", explanation: "Tatabahasa menitikberatkan penggunaan huruf besar, tanda baca, dan susunan ayat agar ayat jelas dan betul." },
+            { question: "Ayat yang betul dari segi tanda baca ialah _______.", options: { A: "Ali pergi ke sekolah", B: "Ali pergi ke sekolah!", C: "Ali pergi ke sekolah?", D: "Ali pergi ke sekolah," }, correctAnswer: "B", explanation: "Ayat itu lengkap dan mempunyai tanda seru yang sesuai untuk menunjukkan kenyataan yang lengkap." },
+            { question: "Manakah ayat yang paling gramatis?", options: { A: "Saya suka makan nasi lemak.", B: "Saya suka makan makanan nasi lemak.", C: "Saya suka nasi makan lemak.", D: "Saya nasi lemak makan suka." }, correctAnswer: "A", explanation: "Ayat A mempunyai susunan yang betul dan mudah difahami." },
+            { question: "Apakah fungsi utama tatabahasa?", options: { A: "Membuat tulisan lebih cantik", B: "Membantu kita menulis dan bercakap dengan betul", C: "Menyusun nombor", D: "Mewarnakan teks" }, correctAnswer: "B", explanation: "Tatabahasa membantu kita menyampaikan idea dengan betul dan jelas." },
+            { question: "Dalam ayat 'Buku itu tebal.', perkataan 'tebal' ialah _______.", options: { A: "kata kerja", B: "kata nama", C: "kata adjektif", D: "kata sendi" }, correctAnswer: "C", explanation: "'Tebal' menerangkan sifat buku, jadi ia termasuk dalam kata adjektif." }
+          ],
+          "kata-nama-am-khas": [
+            { question: "Yang manakah kata nama khas?", options: { A: "sekolah", B: "kucing", C: "Kuala Lumpur", D: "buku" }, correctAnswer: "C", explanation: "Kuala Lumpur ialah nama tempat tertentu, jadi ia kata nama khas." },
+            { question: "Manakah contoh kata nama am?", options: { A: "Malaysia", B: "Ali", C: "rumah", D: "Selangor" }, correctAnswer: "C", explanation: "Rumah ialah benda umum, manakala Malaysia dan Selangor ialah nama tempat khas." },
+            { question: "Ayat yang manakah menggunakan kata nama khas dengan betul?", options: { A: "Saya tinggal di johor.", B: "Saya tinggal di Johor.", C: "Saya tinggal di rumah.", D: "Saya tinggal di jalan." }, correctAnswer: "B", explanation: "Johor ialah nama tempat khas dan ditulis dengan huruf besar." },
+            { question: "Pilih perkataan yang merupakan kata nama khas untuk orang.", options: { A: "guru", B: "Ahmad", C: "pokok", D: "bunga" }, correctAnswer: "B", explanation: "Ahmad ialah nama orang tertentu, jadi ia kata nama khas." },
+            { question: "Manakah ayat yang mengandungi kata nama am?", options: { A: "Kuala Lumpur sangat besar.", B: "Aina pergi ke pasar.", C: "Amir suka membaca buku.", D: "Puan Siti mengajar Bahasa Melayu." }, correctAnswer: "C", explanation: "Buku ialah kata nama am kerana merujuk kepada benda umum." }
+          ],
+          "kata-ganti-nama-diri": [
+            { question: "'Saya' ialah kata ganti nama diri untuk _______.", options: { A: "orang ketiga", B: "orang pertama", C: "orang kedua", D: "tempat" }, correctAnswer: "B", explanation: "'Saya' digunakan oleh orang yang bercakap, jadi ia kata ganti nama diri orang pertama." },
+            { question: "Manakah contoh kata ganti nama diri orang kedua?", options: { A: "kami", B: "dia", C: "kamu", D: "mereka" }, correctAnswer: "C", explanation: "'Kamu' merujuk kepada orang yang diajak bercakap, iaitu orang kedua." },
+            { question: "Ayat yang betul menggunakan kata ganti nama diri ialah _______.", options: { A: "Dia suka membaca buku.", B: "Buku saya sudah rosak.", C: "Mereka bermain bola di padang.", D: "Semua jawapan betul" }, correctAnswer: "D", explanation: "Semua contoh itu menggunakan kata ganti nama diri dengan tepat." },
+            { question: "'Kami' merujuk kepada _______.", options: { A: "satu orang sahaja", B: "dua orang atau lebih yang termasuk diri kita", C: "hanya haiwan", D: "tempat" }, correctAnswer: "B", explanation: "'Kami' merujuk kepada sekumpulan orang yang termasuk diri kita sendiri." },
+            { question: "Pilih kata ganti nama diri orang ketiga.", options: { A: "saya", B: "kami", C: "dia", D: "kamu" }, correctAnswer: "C", explanation: "'Dia' merujuk kepada orang ketiga, bukan diri kita atau orang yang kita bercakap dengan." }
+          ],
+          "kata-kerja": [
+            { question: "Manakah perkataan berikut ialah kata kerja?", options: { A: "cantik", B: "lari", C: "biru", D: "sangat" }, correctAnswer: "B", explanation: "'Lari' menunjukkan perbuatan, maka ia kata kerja." },
+            { question: "Ayat yang manakah mengandungi kata kerja dengan betul?", options: { A: "Rumah itu besar.", B: "Dia menulis karangan.", C: "Bunga itu cantik.", D: "Adik saya pintar." }, correctAnswer: "B", explanation: "'Menulis' ialah perbuatan, jadi ia merupakan kata kerja." },
+            { question: "'Membaca' termasuk dalam kategori _______.", options: { A: "kata nama", B: "kata kerja", C: "kata adjektif", D: "kata sendi" }, correctAnswer: "B", explanation: "'Membaca' adalah tindakan, jadi ia kategori kata kerja." },
+            { question: "Pilih kata kerja yang sesuai untuk melengkapkan ayat: 'Ibu _______ nasi di dapur.'", options: { A: "besar", B: "masak", C: "biru", D: "cepat" }, correctAnswer: "B", explanation: "'Masak' ialah kata kerja yang sesuai dalam ayat itu." },
+            { question: "'Menyanyi' berfungsi sebagai _______.", options: { A: "kata nama", B: "kata kerja", C: "kata adjektif", D: "kata hubung" }, correctAnswer: "B", explanation: "'Menyanyi' menunjukkan perbuatan, jadi ia kata kerja." }
+          ],
+          "kata-adjektif": [
+            { question: "Apakah kata adjektif dalam ayat: 'Bunga itu sangat cantik.'?", options: { A: "bunga", B: "itu", C: "sangat", D: "cantik" }, correctAnswer: "D", explanation: "'Cantik' ialah kata adjektif yang menerangkan sifat bunga itu." },
+            { question: "Manakah perkataan yang merupakan kata adjektif?", options: { A: "lari", B: "makan", C: "cerdas", D: "sekolah" }, correctAnswer: "C", explanation: "'Cerdas' menerangkan sifat seseorang, jadi ia kata adjektif." },
+            { question: "Ayat yang menggunakan kata adjektif dengan betul ialah _______.", options: { A: "Kucing itu tidur.", B: "Kucing itu sangat comel.", C: "Kucing itu suka makan.", D: "Kucing itu di halaman." }, correctAnswer: "B", explanation: "'Comel' ialah kata adjektif yang menerangkan keadaan kucing itu." },
+            { question: "'Pintar' adalah contoh kata adjektif untuk _______.", options: { A: "buah", B: "orang", C: "rumah", D: "baju" }, correctAnswer: "B", explanation: "'Pintar' menerangkan sifat orang." },
+            { question: "Pilih kata adjektif yang sesuai: 'Saya melihat awan yang _______.'", options: { A: "menyanyi", B: "banyak", C: "putih", D: "berlari" }, correctAnswer: "C", explanation: "'Putih' ialah kata adjektif yang menerangkan warna awan." }
+          ],
+          "kosa-kata": [
+            { question: "Apakah maksud kosa kata?", options: { A: "Himpunan perkataan yang kita tahu dan gunakan", B: "Tanda baca dalam ayat", C: "Nombor dalam matematik", D: "Gambar yang cantik" }, correctAnswer: "A", explanation: "Kosa kata ialah himpunan perkataan yang kita faham dan gunakan dalam komunikasi." },
+            { question: "Perkataan yang berfungsi untuk menggambarkan perasaan ialah _______.", options: { A: "gembira", B: "meja", C: "kerusi", D: "tangan" }, correctAnswer: "A", explanation: "'Gembira' menggambarkan perasaan seseorang." },
+            { question: "Pilih ayat yang menggunakan kosa kata yang tepat.", options: { A: "Saya merasa semangat untuk belajar.", B: "Saya merasa meja untuk belajar.", C: "Saya merasa kerusi untuk belajar.", D: "Saya merasa sekolah untuk belajar." }, correctAnswer: "A", explanation: "'Semangat' ialah kosa kata yang sesuai dalam konteks belajar." },
+            { question: "Perkataan 'tenang' bermaksud _______.", options: { A: "cepat", B: "tenang dan tidak gelisah", C: "besar", D: "mudah" }, correctAnswer: "B", explanation: "'Tenang' menggambarkan keadaan yang aman dan tidak gelisah." },
+            { question: "Jika kita mahu menulis ayat yang lebih menarik, kita boleh menambah _______.", options: { A: "lebih banyak kosa kata", B: "lebih banyak nombor", C: "lebih banyak warna", D: "lebih banyak gambar" }, correctAnswer: "A", explanation: "Kosa kata yang kaya membuat ayat lebih menarik dan berkesan." }
+          ],
+          "binaan-ayat": [
+            { question: "Unsur utama dalam binaan ayat ialah _______.", options: { A: "subjek, predikat, objek", B: "gambar, huruf, naskhah", C: "warna, bentuk, saiz", D: "nama, tempat, masa" }, correctAnswer: "A", explanation: "Ayat yang lengkap biasanya mempunyai subjek, predikat, dan kadangkala objek." },
+            { question: "Dalam ayat 'Amin membaca buku.', siapakah subjeknya?", options: { A: "Amin", B: "membaca", C: "buku", D: "di" }, correctAnswer: "A", explanation: "'Amin' ialah pelaku dalam ayat itu, jadi ia subjek." },
+            { question: "Apakah predikat dalam ayat 'Kucing itu tidur.'?", options: { A: "Kucing itu", B: "tidur", C: "itu", D: "Kucing" }, correctAnswer: "B", explanation: "'Tidur' ialah perbuatan yang dilakukan oleh subjek, iaitu predikat." },
+            { question: "Manakah ayat yang dibina dengan betul?", options: { A: "Saya sekolah ke pagi.", B: "Saya pergi ke sekolah pagi.", C: "Ke sekolah saya pergi pagi.", D: "Pagi pergi saya sekolah ke." }, correctAnswer: "B", explanation: "Ayat B mempunyai susunan yang betul dan gramatis." },
+            { question: "Objek dalam ayat 'Ibu membeli sayur.' ialah _______.", options: { A: "Ibu", B: "membeli", C: "sayur", D: "di" }, correctAnswer: "C", explanation: "'Sayur' ialah benda yang dibeli, jadi ia objek." }
+          ],
+          pemahaman: [
+            { question: "Apakah tujuan utama membaca petikan dalam pemahaman?", options: { A: "Mengira jumlah huruf", B: "Memahami makna dan isi teks", C: "Membuat lukisan", D: "Menulis karangan panjang" }, correctAnswer: "B", explanation: "Pemahaman bertujuan untuk memahami isi dan maksud petikan." },
+            { question: "Idea utama dalam petikan biasanya menjawab soalan _______.", options: { A: "apa yang berlaku atau perkara utama yang dibincangkan", B: "berapa harga buku", C: "siapa yang menangis", D: "di mana tarikh hari ini" }, correctAnswer: "A", explanation: "Idea utama menerangkan perkara paling penting yang dibincangkan dalam teks." },
+            { question: "Langkah pertama semasa menjawab soalan pemahaman ialah _______.", options: { A: "mengira perkataan", B: "membaca petikan dengan teliti", C: "menjawab tanpa membaca", D: "menyalin ayat rawak" }, correctAnswer: "B", explanation: "Membaca petikan dengan teliti membantu kita memahami isi dan menjawab soalan dengan tepat." },
+            { question: "Jika soalan menanya 'Apakah yang dilakukan watak utama?', jawapan terbaik ialah _______.", options: { A: "nama watak", B: "tindakan utama watak", C: "warna pakaian", D: "tarikh lahir" }, correctAnswer: "B", explanation: "Soalan itu menumpukan tindakan yang dilakukan oleh watak utama." },
+            { question: "Apakah maksud 'idea utama' dalam pemahaman?", options: { A: "cadangan yang tidak penting", B: "perkara paling penting dalam petikan", C: "semua perkataan yang terdapat dalam teks", D: "rujukan buku" }, correctAnswer: "B", explanation: "Idea utama ialah perkara paling penting yang ingin disampaikan oleh penulis." }
+          ]
+        };
 
-      function renderTopicMenu() {
-        topicGrid.innerHTML = "";
-        DEFAULT_TOPICS.forEach((topic) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "topic-card" + (currentTopicKey === topic.key ? " selected" : "");
-          button.setAttribute("aria-label", `Buka topik ${getTopicLabel(topic.key)}`);
-          button.innerHTML = `
-            <div class="topic-card-top">
-              <div class="topic-icon">${topic.icon}</div>
-              <div class="topic-tag">${topic.tag}</div>
-            </div>
-            <div>
-              <h3>${getTopicLabel(topic.key)}</h3>
-              <p>${topic.description}</p>
-            </div>
-            <div class="topic-arrow">→</div>
-          `;
-          button.addEventListener("click", () => selectTopic(topic.key));
-          topicGrid.appendChild(button);
-        });
-      }
+        const screenMap = {
+          menu: document.getElementById("menu-screen"),
+          topic: document.getElementById("topic-screen"),
+          quizTopics: document.getElementById("quiz-topics-screen"),
+          quiz: document.getElementById("quiz-screen")
+        };
 
-      function renderQuizTopicMenu() {
-        quizTopicGrid.innerHTML = "";
-        DEFAULT_TOPICS.forEach((topic) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "topic-card" + (activeQuizTopic === topic.key ? " selected" : "");
-          button.innerHTML = `
-            <div class="topic-card-top">
-              <div class="topic-icon">${topic.icon}</div>
-              <div class="topic-tag">Kuiz</div>
-            </div>
-            <div>
-              <h3>${getTopicLabel(topic.key)}</h3>
-              <p>${topic.description}</p>
-            </div>
-            <div class="topic-arrow">→</div>
-          `;
-          button.addEventListener("click", () => startQuiz(topic.key));
-          quizTopicGrid.appendChild(button);
-        });
-      }
+        const topicGrid = document.getElementById("topic-grid");
+        const quizTopicGrid = document.getElementById("quiz-topic-grid");
+        const detailIcon = document.getElementById("detail-icon");
+        const detailTitle = document.getElementById("detail-title");
+        const detailPanelTitle = document.getElementById("detail-panel-title");
+        const detailPanelContent = document.getElementById("detail-panel-content");
+        const detailExamples = document.getElementById("detail-examples");
+        const quizQuestionEl = document.getElementById("quiz-question");
+        const quizOptionsEl = document.getElementById("quiz-options");
+        const quizFeedbackEl = document.getElementById("quiz-feedback");
+        const nextQuestionBtn = document.getElementById("next-question-btn");
+        const retryQuizBtn = document.getElementById("retry-quiz-btn");
+        const pickTopicBtn = document.getElementById("pick-topic-btn");
+        const quizCounterEl = document.getElementById("quiz-counter");
+        const quizBadgeEl = document.getElementById("quiz-badge");
+        const log = document.getElementById("chat-log");
+        const chipsBar = document.getElementById("chips-bar");
+        const input = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
 
-      function showScreen(name) {
-        Object.entries(screenMap).forEach(([key, element]) => {
-          element.classList.toggle("active", key === name);
-        });
-        currentScreen = name;
-      }
+        const state = {
+          currentTopicKey: null,
+          activeQuizTopic: null,
+          quizQuestions: [],
+          quizIndex: 0,
+          quizScore: 0,
+          answeredCurrentQuestion: false,
+          previousScreen: "menu"
+        };
 
-      function showMenu() {
-        currentTopicKey = currentTopicKey || "tatabahasa";
-        renderTopicMenu();
-        showScreen("menu");
-        setChips(CHIP_IDLE);
-      }
+        const CHIP_IDLE = ["Kata Nama", "Kata Kerja", "Kata Adjektif", "Kata Ganti Nama", "Binaan Ayat", "Kosa Kata", "Pemahaman", "Tatabahasa"];
+        const CHIP_TOPIC = ["Nota Ringkas", "Contoh Lain", "Latihan", "Kuiz", "Menu"];
 
-      function selectTopic(key) {
-        currentTopicKey = key;
-        renderTopicMenu();
-        renderTopicDetail(key, "note");
-        showScreen("topic");
-        setChips(CHIP_TOPIC);
-      }
-
-      function renderTopicDetail(key, mode) {
-        const meta = getTopicMeta(key);
-        detailIcon.textContent = meta.icon;
-        detailTitle.textContent = getTopicLabel(key);
-        detailPanelTitle.textContent = mode === "practice" ? "Latihan" : mode === "examples" ? "Contoh Lain" : "Nota Ringkas";
-
-        if (mode === "practice") {
-          const practiceList = meta.practice.map((item) => `<li>${item}</li>`).join("");
-          detailPanelContent.innerHTML = `<ul>${practiceList}</ul>`;
-        } else if (mode === "examples") {
-          detailPanelContent.innerHTML = `<p>${meta.description}</p>`;
-        } else {
-          detailPanelContent.innerHTML = `<p>${meta.description}</p>`;
+        function setChips(labels) {
+          chipsBar.innerHTML = "";
+          labels.forEach((label) => {
+            const btn = document.createElement("button");
+            btn.className = "chip";
+            btn.textContent = label;
+            btn.addEventListener("click", () => sendMessage(label));
+            chipsBar.appendChild(btn);
+          });
         }
 
-        const exampleList = meta.examples.map((example) => `<li>${example}</li>`).join("");
-        detailExamples.innerHTML = exampleList;
-      }
-
-      function triggerAction(action) {
-        if (!currentTopicKey) {
-          showMenu();
-          return;
+        function getTopicLabel(key) {
+          if (key === "kata-nama-am-khas") return "Kata Nama Am dan Kata Nama Khas";
+          const item = TOPICS.find((topic) => topic.key === key);
+          return item ? item.description.includes("Kata") ? item.description : item.key : "Topik";
         }
 
-        if (action === "menu") {
-          showMenu();
-          return;
+        function renderTopicMenu() {
+          topicGrid.innerHTML = "";
+          TOPICS.forEach((topic) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "topic-card" + (state.currentTopicKey === topic.key ? " selected" : "");
+            button.innerHTML = `
+              <div class="topic-card-top">
+                <div class="topic-icon">${topic.icon}</div>
+                <div class="topic-tag">${topic.tag}</div>
+              </div>
+              <div>
+                <h3>${getTopicLabel(topic.key)}</h3>
+                <p>${topic.description}</p>
+              </div>
+              <div class="topic-arrow">→</div>
+            `;
+            button.addEventListener("click", () => selectTopic(topic.key));
+            topicGrid.appendChild(button);
+          });
         }
 
-        if (action === "topics") {
-          renderQuizTopicMenu();
-          showScreen("quizTopics");
+        function renderQuizTopicMenu() {
+          quizTopicGrid.innerHTML = "";
+          TOPICS.forEach((topic) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "topic-card" + (state.activeQuizTopic === topic.key ? " selected" : "");
+            button.innerHTML = `
+              <div class="topic-card-top">
+                <div class="topic-icon">${topic.icon}</div>
+                <div class="topic-tag">Kuiz</div>
+              </div>
+              <div>
+                <h3>${getTopicLabel(topic.key)}</h3>
+                <p>${topic.description}</p>
+              </div>
+              <div class="topic-arrow">→</div>
+            `;
+            button.addEventListener("click", () => startQuiz(topic.key));
+            quizTopicGrid.appendChild(button);
+          });
+        }
+
+        function showScreen(name) {
+          Object.entries(screenMap).forEach(([key, element]) => {
+            element.classList.toggle("active", key === name);
+          });
+        }
+
+        function showMenu() {
+          state.currentTopicKey = state.currentTopicKey || "tatabahasa";
+          renderTopicMenu();
+          showScreen("menu");
           setChips(CHIP_IDLE);
-          return;
         }
 
-        if (action === "note") {
-          renderTopicDetail(currentTopicKey, "note");
+        function selectTopic(key) {
+          state.currentTopicKey = key;
+          renderTopicMenu();
+          renderTopicDetail(key, "note");
           showScreen("topic");
-          return;
+          state.previousScreen = "menu";
+          setChips(CHIP_TOPIC);
         }
 
-        if (action === "examples") {
-          renderTopicDetail(currentTopicKey, "examples");
-          showScreen("topic");
-          return;
+        function renderTopicDetail(key, mode) {
+          const topic = TOPIC_DETAILS[key] || TOPIC_DETAILS.tatabahasa;
+          const item = TOPICS.find((t) => t.key === key) || TOPICS[0];
+          detailIcon.textContent = item.icon;
+          detailTitle.textContent = getTopicLabel(key);
+          detailPanelTitle.textContent = mode === "practice" ? "Latihan" : mode === "examples" ? "Contoh Lain" : "Nota Ringkas";
+
+          if (mode === "practice") {
+            detailPanelContent.innerHTML = `<ul>${topic.practice.map((line) => `<li>${line}</li>`).join("")}</ul>`;
+          } else if (mode === "examples") {
+            detailPanelContent.innerHTML = `<p>${topic.notes}</p>`;
+          } else {
+            detailPanelContent.innerHTML = `<p>${topic.notes}</p>`;
+          }
+
+          detailExamples.innerHTML = topic.examples.map((example) => `<li>${example}</li>`).join("");
         }
 
-        if (action === "practice") {
-          renderTopicDetail(currentTopicKey, "practice");
-          showScreen("topic");
-          return;
-        }
+        function triggerAction(action) {
+          if (action === "menu") {
+            showMenu();
+            return;
+          }
 
-        if (action === "quiz") {
-          renderQuizTopicMenu();
-          showScreen("quizTopics");
-          setChips(CHIP_IDLE);
-          return;
-        }
-
-        if (action === "back") {
-          if (currentScreen === "quiz") {
+          if (action === "topics") {
             renderQuizTopicMenu();
             showScreen("quizTopics");
-          } else if (currentScreen === "quizTopics") {
+            setChips(CHIP_IDLE);
+            return;
+          }
+
+          if (action === "back") {
+            if (screenMap.quiz.classList.contains("active")) {
+              const topicKey = state.activeQuizTopic || state.currentTopicKey || "tatabahasa";
+              if (state.currentTopicKey) {
+                renderTopicDetail(state.currentTopicKey, "note");
+                showScreen("topic");
+              } else {
+                renderTopicDetail(topicKey, "note");
+                showScreen("topic");
+              }
+              setChips(CHIP_TOPIC);
+              return;
+            }
+            if (screenMap.topic.classList.contains("active") || screenMap.quizTopics.classList.contains("active")) {
+              showMenu();
+              return;
+            }
             showMenu();
-          } else if (currentScreen === "topic") {
-            showMenu();
-          } else {
-            showMenu();
+            return;
+          }
+
+          if (action === "note") {
+            if (!state.currentTopicKey) { state.currentTopicKey = "tatabahasa"; }
+            renderTopicDetail(state.currentTopicKey, "note");
+            showScreen("topic");
+            return;
+          }
+
+          if (action === "examples") {
+            if (!state.currentTopicKey) { state.currentTopicKey = "tatabahasa"; }
+            renderTopicDetail(state.currentTopicKey, "examples");
+            showScreen("topic");
+            return;
+          }
+
+          if (action === "practice") {
+            if (!state.currentTopicKey) { state.currentTopicKey = "tatabahasa"; }
+            renderTopicDetail(state.currentTopicKey, "practice");
+            showScreen("topic");
+            return;
+          }
+
+          if (action === "quiz") {
+            if (!state.currentTopicKey) { state.currentTopicKey = "tatabahasa"; }
+            renderQuizTopicMenu();
+            showScreen("quizTopics");
+            setChips(CHIP_IDLE);
+            return;
+          }
+
+          if (action === "next-question") {
+            state.quizIndex += 1;
+            if (state.quizIndex < state.quizQuestions.length) {
+              renderQuizQuestion();
+            } else {
+              finishQuiz();
+            }
+          }
+
+          if (action === "retry-quiz") {
+            startQuiz(state.activeQuizTopic || state.currentTopicKey || "tatabahasa");
           }
         }
-      }
 
-      function startQuiz(topicKey) {
-        activeQuizTopic = topicKey;
-        quizQuestions = StudyBuddyBrain.getValidQuizQuestions(topicKey) || [];
-
-        if (!quizQuestions.length) {
-          renderBubble(`Maaf, kuiz untuk topik ${getTopicLabel(topicKey)} belum tersedia.`, "bot");
-          showScreen("topic");
-          return;
+        function getQuizQuestions(topicKey) {
+          return (QUIZ_BANKS[topicKey] || QUIZ_BANKS.tatabahasa).slice();
         }
 
-        quizIndex = 0;
-        quizScore = 0;
-        answeredCurrentQuestion = false;
-        nextQuestionBtn.classList.add("hidden");
-        retryQuizBtn.classList.add("hidden");
-        pickTopicBtn.classList.add("hidden");
-        quizFeedbackEl.classList.remove("visible");
-        quizFeedbackEl.textContent = "";
-        renderQuizQuestion();
-        showScreen("quiz");
-        setChips(CHIP_QUIZ);
-      }
+        function renderQuizQuestion() {
+          const question = state.quizQuestions[state.quizIndex];
+          if (!question) {
+            finishQuiz();
+            return;
+          }
 
-      function renderQuizQuestion() {
-        const question = quizQuestions[quizIndex];
-        if (!question) {
-          showFinalResult();
-          return;
+          const total = state.quizQuestions.length;
+          quizBadgeEl.textContent = `Kuiz • ${getTopicLabel(state.activeQuizTopic || state.currentTopicKey)}`;
+          quizCounterEl.textContent = `Soalan ${state.quizIndex + 1}/${total}`;
+          quizQuestionEl.textContent = question.question;
+          quizFeedbackEl.classList.remove("visible");
+          quizFeedbackEl.textContent = "";
+          nextQuestionBtn.classList.add("hidden");
+          retryQuizBtn.classList.add("hidden");
+          pickTopicBtn.classList.add("hidden");
+          state.answeredCurrentQuestion = false;
+
+          quizOptionsEl.innerHTML = "";
+          Object.entries(question.options).forEach(([letter, text]) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "quiz-option";
+            button.innerHTML = `<span class="letter">${letter}</span><span>${text}</span>`;
+            button.addEventListener("click", () => handleAnswerClick(button, question, letter));
+            quizOptionsEl.appendChild(button);
+          });
         }
 
-        quizBadgeEl.textContent = `${getTopicLabel(activeQuizTopic)}`;
-        quizCounterEl.textContent = `Soalan ${quizIndex + 1}/${quizQuestions.length}`;
-        quizQuestionEl.textContent = question.question;
-        quizOptionsEl.innerHTML = "";
-        answeredCurrentQuestion = false;
-        quizFeedbackEl.classList.remove("visible");
-        quizFeedbackEl.textContent = "";
-        nextQuestionBtn.classList.add("hidden");
+        function handleAnswerClick(button, question, selectedLetter) {
+          if (state.answeredCurrentQuestion) return;
+          state.answeredCurrentQuestion = true;
 
-        const letters = ["A", "B", "C", "D"];
-        letters.forEach((letter) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = "quiz-option";
-          button.innerHTML = `<span class="letter">${letter}</span><span>${question.options[letter]}</span>`;
-          button.addEventListener("click", () => answerQuiz(letter));
-          quizOptionsEl.appendChild(button);
-        });
-      }
+          const buttons = [...quizOptionsEl.querySelectorAll(".quiz-option")];
+          buttons.forEach((btn) => {
+            btn.disabled = true;
+            btn.classList.add("disabled");
+          });
 
-      function answerQuiz(letter) {
-        if (answeredCurrentQuestion) return;
-
-        const question = quizQuestions[quizIndex];
-        const optionButtons = [...quizOptionsEl.querySelectorAll(".quiz-option")];
-        answeredCurrentQuestion = true;
-
-        optionButtons.forEach((button) => {
-          const value = button.querySelector(".letter").textContent;
-          button.classList.add("disabled");
-          button.disabled = true;
-
-          if (value === question.correctAnswer) {
+          const isCorrect = selectedLetter === question.correctAnswer;
+          if (isCorrect) {
+            state.quizScore += 1;
             button.classList.add("correct");
+            quizFeedbackEl.textContent = `Betul! ${question.explanation}`;
+          } else {
+            button.classList.add("wrong");
+            const correctButton = buttons.find((btn) => {
+              const letter = btn.querySelector(".letter")?.textContent;
+              return letter === question.correctAnswer;
+            });
+            if (correctButton) correctButton.classList.add("correct");
+            quizFeedbackEl.textContent = `Salah. ${question.explanation}`;
           }
 
-          if (value === letter && value !== question.correctAnswer) {
-            button.classList.add("wrong");
+          quizFeedbackEl.classList.add("visible");
+
+          if (state.quizIndex < state.quizQuestions.length - 1) {
+            nextQuestionBtn.classList.remove("hidden");
+          } else {
+            finishQuiz();
+          }
+        }
+
+        function finishQuiz() {
+          nextQuestionBtn.classList.add("hidden");
+          retryQuizBtn.classList.remove("hidden");
+          pickTopicBtn.classList.remove("hidden");
+
+          const total = state.quizQuestions.length || 1;
+          const scoreText = `Skor akhir: ${state.quizScore}/${total}.`;
+          const remark = state.quizScore === total ? "Hebat! Semua jawapan betul!" : state.quizScore >= Math.ceil(total / 2) ? "Bagus! Teruskan usaha anda." : "Cuba lagi ya! Anda pasti boleh buat lebih baik.";
+          quizFeedbackEl.textContent = `${scoreText} ${remark}`;
+          quizFeedbackEl.classList.add("visible");
+          quizQuestionEl.textContent = "Tahniah! Anda telah selesai kuiz ini.";
+          quizOptionsEl.innerHTML = "";
+          quizCounterEl.textContent = `Markah ${state.quizScore}/${total}`;
+        }
+
+        function startQuiz(topicKey) {
+          state.activeQuizTopic = topicKey;
+          state.currentTopicKey = topicKey;
+          state.quizQuestions = getQuizQuestions(topicKey);
+          state.quizIndex = 0;
+          state.quizScore = 0;
+          state.answeredCurrentQuestion = false;
+          retryQuizBtn.classList.add("hidden");
+          pickTopicBtn.classList.add("hidden");
+          renderQuizQuestion();
+          showScreen("quiz");
+          setChips(CHIP_IDLE);
+        }
+
+        function renderBubble(text, from) {
+          const wrap = document.createElement("div");
+          wrap.className = `msg ${from}`;
+
+          const avatar = document.createElement("div");
+          avatar.className = "msg-avatar";
+          avatar.textContent = from === "bot" ? "🤖" : "👤";
+
+          const bubble = document.createElement("div");
+          bubble.className = "bubble";
+          bubble.innerHTML = text;
+
+          wrap.appendChild(avatar);
+          wrap.appendChild(bubble);
+          log.appendChild(wrap);
+          log.scrollTop = log.scrollHeight;
+        }
+
+        function sendMessage(text) {
+          const value = String(text || input.value || "").trim();
+          if (!value) return;
+          renderBubble(value, "user");
+          input.value = "";
+
+          const lower = value.toLowerCase();
+          const seenTopic = TOPICS.find((topic) => lower.includes(topic.key.toLowerCase().replace(/-/g, " ")) || lower.includes(getTopicLabel(topic.key).toLowerCase()));
+
+          if (lower.includes("menu") || lower.includes("utama")) {
+            showMenu();
+            renderBubble("Menu utama sedang dibuka. Pilih tajuk yang anda mahu belajar.", "bot");
+            return;
+          }
+
+          if (lower.includes("pilih tajuk") || lower.includes("topik") || lower.includes("tajuk")) {
+            renderQuizTopicMenu();
+            showScreen("quizTopics");
+            setChips(CHIP_IDLE);
+            renderBubble("Sila pilih tajuk yang ingin anda belajar atau dijadikan kuiz.", "bot");
+            return;
+          }
+
+          if (lower.includes("kuiz")) {
+            const topicKey = seenTopic ? seenTopic.key : state.currentTopicKey || "tatabahasa";
+            startQuiz(topicKey);
+            renderBubble(`Kuiz untuk ${getTopicLabel(topicKey)} telah dimulakan.`, "bot");
+            return;
+          }
+
+          if (seenTopic) {
+            const topicKey = seenTopic.key;
+            state.currentTopicKey = topicKey;
+            renderTopicDetail(topicKey, "note");
+            showScreen("topic");
+            renderBubble(`Topik ${getTopicLabel(topicKey)} dipilih. Anda boleh membaca nota atau memulakan kuiz.`, "bot");
+            return;
+          }
+
+          if (lower.includes("nota") || lower.includes("ringkas")) {
+            if (!state.currentTopicKey) state.currentTopicKey = "tatabahasa";
+            renderTopicDetail(state.currentTopicKey, "note");
+            showScreen("topic");
+            renderBubble("Nota ringkas untuk topik yang dipilih dipaparkan.", "bot");
+            return;
+          }
+
+          if (lower.includes("contoh")) {
+            if (!state.currentTopicKey) state.currentTopicKey = "tatabahasa";
+            renderTopicDetail(state.currentTopicKey, "examples");
+            showScreen("topic");
+            renderBubble("Contoh lain untuk topik ini dipaparkan.", "bot");
+            return;
+          }
+
+          if (lower.includes("latihan") || lower.includes("practice")) {
+            if (!state.currentTopicKey) state.currentTopicKey = "tatabahasa";
+            renderTopicDetail(state.currentTopicKey, "practice");
+            showScreen("topic");
+            renderBubble("Latihan untuk topik ini dipaparkan.", "bot");
+            return;
+          }
+
+          if (lower.includes("hai") || lower.includes("hello") || lower.includes("selamat")) {
+            renderBubble("Hai! Selamat datang ke Study Buddy Bot. Pilih tajuk di bawah untuk mula belajar!", "bot");
+            return;
+          }
+
+          renderBubble("Saya boleh membantu anda memilih topik, melihat nota, contoh, latihan dan kuiz Bahasa Melayu.", "bot");
+        }
+
+        document.querySelectorAll("[data-action]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const action = button.dataset.action;
+            if (action === "next-question") {
+              state.quizIndex += 1;
+              if (state.quizIndex < state.quizQuestions.length) {
+                renderQuizQuestion();
+              } else {
+                finishQuiz();
+              }
+              return;
+            }
+            if (action === "retry-quiz") {
+              startQuiz(state.activeQuizTopic || state.currentTopicKey || "tatabahasa");
+              return;
+            }
+            triggerAction(action);
+          });
+        });
+
+        sendBtn.addEventListener("click", () => sendMessage(input.value));
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage(input.value);
           }
         });
 
-        const isCorrect = letter === question.correctAnswer;
-        if (isCorrect) {
-          quizScore += 1;
-        }
-
-        const feedback = isCorrect
-          ? `Betul! Tahniah! ${question.explanation}`
-          : `Belum tepat. Jawapan yang betul ialah ${question.correctAnswer}. ${question.explanation}`;
-
-        quizFeedbackEl.textContent = feedback;
-        quizFeedbackEl.classList.add("visible");
-
-        if (quizIndex === quizQuestions.length - 1) {
-          nextQuestionBtn.textContent = "Lihat Keputusan";
-        } else {
-          nextQuestionBtn.textContent = "Soalan Seterusnya";
-        }
-        nextQuestionBtn.classList.remove("hidden");
-      }
-
-      function nextQuestion() {
-        if (!answeredCurrentQuestion) {
-          quizFeedbackEl.textContent = "Sila pilih jawapan sebelum meneruskan.";
-          quizFeedbackEl.classList.add("visible");
-          return;
-        }
-
-        if (quizIndex >= quizQuestions.length - 1) {
-          showFinalResult();
-          return;
-        }
-
-        quizIndex += 1;
-        renderQuizQuestion();
-      }
-
-      function showFinalResult() {
-        const total = quizQuestions.length;
-        const percentage = Math.round((quizScore / total) * 100);
-        quizCounterEl.textContent = `Keputusan Akhir`;
-        quizBadgeEl.textContent = `Skor ${quizScore}/${total}`;
-        quizQuestionEl.textContent = `Tahniah! Skor kamu ialah ${quizScore}/${total} (${percentage}%).`;
-        quizOptionsEl.innerHTML = "";
-        quizFeedbackEl.textContent = percentage >= 80 ? "Hebat! Kamu memang mahir dalam topik ini!" : percentage >= 60 ? "Bagus! Teruskan usaha anda." : "Terus berlatih ya, anda pasti akan bertambah mahir!";
-        quizFeedbackEl.classList.add("visible");
-        nextQuestionBtn.classList.add("hidden");
-        retryQuizBtn.classList.remove("hidden");
-        pickTopicBtn.classList.remove("hidden");
-      }
-
-      function sendMessage(rawText) {
-        const text = String(rawText || input.value || "").trim();
-        if (!text) return;
-
-        renderBubble(text, "user");
-        input.value = "";
-        input.style.height = "auto";
-        sendBtn.disabled = true;
-        showTyping();
-
-        setTimeout(() => {
-          hideTyping();
-          const result = StudyBuddyBrain.processMessage(session, text);
-          session = result.session;
-          renderBubble(result.reply, "bot");
-          sendBtn.disabled = false;
-          input.focus();
-
-          const normalized = String(text || "").trim().toLowerCase();
-          if (normalized === "menu" || normalized === "pilih tajuk" || normalized.includes("menu") || normalized.includes("senarai topik")) {
-            showMenu();
-          }
-        }, 300 + Math.random() * 200);
-      }
-
-      document.querySelector("[data-action='menu']").addEventListener("click", () => showMenu());
-      document.querySelector("[data-action='topics']").addEventListener("click", () => {
-        renderQuizTopicMenu();
-        showScreen("quizTopics");
-        setChips(CHIP_IDLE);
-      });
-      document.querySelector("[data-action='back']").addEventListener("click", () => triggerAction("back"));
-      document.querySelectorAll("[data-action]").forEach((button) => {
-        const action = button.getAttribute("data-action");
-        if (["menu", "topics", "back", "note", "examples", "practice", "quiz"].includes(action)) {
-          button.addEventListener("click", () => triggerAction(action));
-        }
-      });
-
-      nextQuestionBtn.addEventListener("click", nextQuestion);
-      retryQuizBtn.addEventListener("click", () => {
-        if (activeQuizTopic) {
-          startQuiz(activeQuizTopic);
-        }
-      });
-      pickTopicBtn.addEventListener("click", () => {
-        renderQuizTopicMenu();
-        showScreen("quizTopics");
-        setChips(CHIP_IDLE);
-      });
-
-      sendBtn.addEventListener("click", () => sendMessage());
-      input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && !event.shiftKey) {
-          event.preventDefault();
-          sendMessage();
-        }
-      });
-
-      input.addEventListener("input", () => {
-        input.style.height = "auto";
-        input.style.height = Math.min(input.scrollHeight, 120) + "px";
-      });
-
-      function boot() {
         renderTopicMenu();
-        setChips(CHIP_IDLE);
+        renderQuizTopicMenu();
         showMenu();
-        renderBubble("Hai! Selamat datang ke Study Buddy Bot. 😊 Pilih tajuk di bawah untuk mula belajar!", "bot");
-      }
-
-      boot();
-    })();
-  </script>
-</body>
+        setChips(CHIP_IDLE);
+        renderBubble("Hai! Saya Study Buddy Bot. Pilih tajuk untuk mula belajar!", "bot");
+      })();
+    </script>
+  </body>
 </html>
