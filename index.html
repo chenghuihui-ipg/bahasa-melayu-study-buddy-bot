@@ -419,6 +419,17 @@
         display: block;
       }
 
+      .result-summary {
+        margin-top: 12px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(109,78,246,0.08), rgba(96,165,250,0.10));
+        border: 1px solid rgba(109,78,246,0.12);
+        color: var(--text);
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
       .quiz-actions {
         display: flex;
         flex-wrap: wrap;
@@ -645,6 +656,7 @@
             <h2 id="quiz-question" class="quiz-question">Soalan kuiz akan dipaparkan di sini.</h2>
             <div id="quiz-options" class="quiz-options"></div>
             <div id="quiz-feedback" class="feedback" aria-live="polite"></div>
+            <div id="quiz-result-summary" class="result-summary hidden" aria-live="polite"></div>
 
             <div class="quiz-actions">
               <button id="next-question-btn" class="action-btn primary hidden" data-action="next-question">Soalan Seterusnya</button>
@@ -800,6 +812,7 @@
         const quizQuestionEl = document.getElementById("quiz-question");
         const quizOptionsEl = document.getElementById("quiz-options");
         const quizFeedbackEl = document.getElementById("quiz-feedback");
+        const quizResultSummaryEl = document.getElementById("quiz-result-summary");
         const nextQuestionBtn = document.getElementById("next-question-btn");
         const retryQuizBtn = document.getElementById("retry-quiz-btn");
         const pickTopicBtn = document.getElementById("pick-topic-btn");
@@ -939,13 +952,11 @@
 
           if (action === "back") {
             if (screenMap.quiz.classList.contains("active")) {
-              const topicKey = state.activeQuizTopic || state.currentTopicKey || "tatabahasa";
               if (state.currentTopicKey) {
                 renderTopicDetail(state.currentTopicKey, "note");
                 showScreen("topic");
               } else {
-                renderTopicDetail(topicKey, "note");
-                showScreen("topic");
+                showMenu();
               }
               setChips(CHIP_TOPIC);
               return;
@@ -1007,6 +1018,7 @@
 
         function renderQuizQuestion() {
           const question = state.quizQuestions[state.quizIndex];
+          quizResultSummaryEl.classList.add("hidden");
           if (!question) {
             finishQuiz();
             return;
@@ -1076,11 +1088,14 @@
           const total = state.quizQuestions.length || 1;
           const scoreText = `Skor akhir: ${state.quizScore}/${total}.`;
           const remark = state.quizScore === total ? "Hebat! Semua jawapan betul!" : state.quizScore >= Math.ceil(total / 2) ? "Bagus! Teruskan usaha anda." : "Cuba lagi ya! Anda pasti boleh buat lebih baik.";
+
+          quizQuestionEl.textContent = "🎉 Keputusan Akhir";
           quizFeedbackEl.textContent = `${scoreText} ${remark}`;
           quizFeedbackEl.classList.add("visible");
-          quizQuestionEl.textContent = "Tahniah! Anda telah selesai kuiz ini.";
-          quizOptionsEl.innerHTML = "";
+          quizResultSummaryEl.textContent = `Anda mendapat ${state.quizScore} daripada ${total} markah. ${remark}`;
+          quizResultSummaryEl.classList.remove("hidden");
           quizCounterEl.textContent = `Markah ${state.quizScore}/${total}`;
+          quizOptionsEl.innerHTML = "";
         }
 
         function startQuiz(topicKey) {
@@ -1092,6 +1107,7 @@
           state.answeredCurrentQuestion = false;
           retryQuizBtn.classList.add("hidden");
           pickTopicBtn.classList.add("hidden");
+          quizResultSummaryEl.classList.add("hidden");
           renderQuizQuestion();
           showScreen("quiz");
           setChips(CHIP_IDLE);
