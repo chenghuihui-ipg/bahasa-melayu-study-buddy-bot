@@ -10,7 +10,7 @@
       examples: ["Ayat yang betul menggunakan tanda baca yang tepat.", "Kata kerja berubah mengikut masa dan subjek."],
       practice: [
         "Bina satu ayat yang menggunakan subjek, predikat dan objek dengan betul.",
-        "Kenal pasti kata kerja dalam ayat: 'Amir membaca buku di perpustakaan.'",
+        "Kenal pasti kata kerja dalam ayat: 'Amir membaca buku di perpustakaan.'.",
         "Tuliskan satu ayat yang mengandungi kata adjektif."
       ]
     },
@@ -35,7 +35,8 @@
       practice: [
         "Bina ayat yang menggunakan 'saya' dan 'kami'.",
         "Tukarkan nama orang kepada kata ganti nama yang sesuai.",
-        "Nyatakan penggunaan kata ganti nama diri dalam ayat." ]
+        "Nyatakan penggunaan kata ganti nama diri dalam ayat."
+      ]
     },
     {
       key: "kata-kerja",
@@ -46,7 +47,7 @@
       practice: [
         "Tuliskan lima kata kerja yang biasa anda lakukan di sekolah.",
         "Bina ayat menggunakan kata kerja 'melukis'.",
-        "Kenal pasti kata kerja dalam ayat: 'Kucing itu melompat ke atas meja.'"
+        "Kenal pasti kata kerja dalam ayat: 'Kucing itu melompat ke atas meja.'."
       ]
     },
     {
@@ -58,7 +59,7 @@
       practice: [
         "Berikan lima kata adjektif yang menggambarkan keadaan cuaca.",
         "Tuliskan ayat menggunakan kata adjektif 'cerdas'.",
-        "Nyatakan kata adjektif dalam ayat: 'Rumah itu besar dan cantik.'"
+        "Nyatakan kata adjektif dalam ayat: 'Rumah itu besar dan cantik.'."
       ]
     },
     {
@@ -99,7 +100,9 @@
     }
   ];
 
-  const QUIZZES = {
+  const LETTERS = ["A", "B", "C", "D"];
+
+  const RAW_QUIZZES = {
     "kata-nama-am-khas": [
       {
         q: "Manakah yang merupakan kata nama khas?",
@@ -294,6 +297,52 @@
     ]
   };
 
+  function normalizeQuizQuestion(rawQuestion) {
+    if (!rawQuestion || typeof rawQuestion !== "object") {
+      return null;
+    }
+
+    const questionText = String(rawQuestion.question || rawQuestion.q || "").trim();
+    let options = {};
+
+    if (rawQuestion.options && typeof rawQuestion.options === "object") {
+      LETTERS.forEach((letter) => {
+        options[letter] = String(rawQuestion.options[letter] || "").trim();
+      });
+    } else if (Array.isArray(rawQuestion.choices)) {
+      LETTERS.forEach((letter, index) => {
+        options[letter] = String(rawQuestion.choices[index] || "").trim();
+      });
+    }
+
+    const correctAnswer = String(rawQuestion.correctAnswer || rawQuestion.answer || "").trim().toUpperCase();
+    const explanation = String(rawQuestion.explanation || "").trim();
+
+    if (!questionText || !LETTERS.every((letter) => options[letter] && options[letter].length > 0)) {
+      return null;
+    }
+    if (!LETTERS.includes(correctAnswer) || !options[correctAnswer]) {
+      return null;
+    }
+    if (!explanation) {
+      return null;
+    }
+
+    return {
+      question: questionText,
+      options,
+      correctAnswer,
+      explanation
+    };
+  }
+
+  const QUIZZES = {};
+  Object.keys(RAW_QUIZZES).forEach((topicKey) => {
+    QUIZZES[topicKey] = (RAW_QUIZZES[topicKey] || [])
+      .map(normalizeQuizQuestion)
+      .filter(Boolean);
+  });
+
   const KB = {};
   TOPICS.forEach((topic) => {
     KB[topic.key] = {
@@ -353,12 +402,39 @@
       state: "idle",
       topic: null,
       quizTopic: null,
+      quizQuestions: [],
       quizIndex: 0,
       quizScore: 0,
+      quizAnswered: false,
+      lastAnswer: "",
       practiceIndex: 0,
       practiceTopic: null,
       lastPrompt: ""
     };
+  }
+
+  function validateQuizQuestion(question) {
+    if (!question || typeof question !== "object") return false;
+    if (!question.question || !question.explanation) return false;
+    if (!question.options || typeof question.options !== "object") return false;
+    if (!LETTERS.every((letter) => typeof question.options[letter] === "string" && question.options[letter].trim().length > 0)) {
+      return false;
+    }
+    const correctAnswer = String(question.correctAnswer || "").trim().toUpperCase();
+    if (!LETTERS.includes(correctAnswer) || !question.options[correctAnswer]) {
+      return false;
+    }
+    return true;
+  }
+
+  function getValidQuizQuestions(topicKey) {
+    if (!topicKey || !QUIZZES[topicKey]) return [];
+    return QUIZZES[topicKey].filter(validateQuizQuestion);
+  }
+
+  function getCurrentQuizQuestion(session) {
+    const questions = session.quizQuestions || [];
+    return questions[session.quizIndex] || null;
   }
 
   function chooseTopic(session, topicKey) {
@@ -430,7 +506,9 @@
 
   function startQuiz(session, topicKey) {
     const key = topicKey || session.topic || "kata-nama-am-khas";
-    if (!QUIZZES[key] || !QUIZZES[key].length) {
+    const validQuestions = getValidQuizQuestions(key);
+
+    if (!validQuestions.length) {
       return {
         session,
         reply: `Maaf, kuiz untuk ${KB[key]?.label || "topik ini"} belum tersedia.`
@@ -439,18 +517,31 @@
 
     session.state = "quiz_active";
     session.quizTopic = key;
+    session.quizQuestions = validQuestions;
     session.quizIndex = 0;
     session.quizScore = 0;
-    session.lastPrompt = `Kuiz ${KB[key].label}: ${QUIZZES[key][0].q}`;
+    session.quizAnswered = false;
+    session.lastAnswer = "";
+    session.lastPrompt = `Kuiz ${KB[key].label}: ${validQuestions[0].question}`;
     return {
       session,
-      reply: `${KB[key].label} – Kuiz\n\n${QUIZZES[key][0].q}\n\nPilihan: A, B, C, D`
+      reply: `${KB[key].label} – Kuiz\n\nSila pilih jawapan yang betul untuk soalan berikut.`
     };
+  }
+
+  function extractAnswerChoice(rawText) {
+    const clean = normalizeText(rawText);
+    if (!clean) return null;
+    const match = clean.match(/\b(a|b|c|d)\b|\b(?:jawapan|pilihan)\s*(a|b|c|d)\b/);
+    if (!match) return null;
+    const letter = (match[1] || match[match.length - 1] || "").toUpperCase();
+    if (LETTERS.includes(letter)) return letter;
+    return null;
   }
 
   function answerQuiz(session, rawText) {
     const key = session.quizTopic;
-    const list = QUIZZES[key] || [];
+    const list = getValidQuizQuestions(key);
     if (!list.length) {
       return {
         session,
@@ -467,41 +558,97 @@
       };
     }
 
-    const choice = normalizeText(rawText).replace(/(a|b|c|d)/g, "$1").trim();
-    let answer = "";
-    if (/\b(a|b|c|d)\b/.test(choice)) {
-      answer = choice.toUpperCase();
-    } else if (/\b(?:jawapan|pilihan)\s*(a|b|c|d)\b/.test(choice)) {
-      answer = choice.match(/(a|b|c|d)/)[1].toUpperCase();
+    if (session.quizAnswered) {
+      return {
+        session,
+        reply: "Anda sudah menjawab soalan ini. Tekan \"Soalan Seterusnya\" untuk teruskan."
+      };
     }
 
-    const isCorrect = answer && answer === current.answer;
+    const selected = extractAnswerChoice(rawText);
+    if (!selected) {
+      return {
+        session,
+        reply: "Sila pilih jawapan A, B, C atau D."
+      };
+    }
+
+    const correctText = current.options[current.correctAnswer];
+    const isCorrect = selected === current.correctAnswer;
+    session.quizAnswered = true;
+    session.lastAnswer = selected;
     if (isCorrect) session.quizScore += 1;
 
-    const feedback = `${isCorrect ? "Betul!" : `Salah. Jawapan yang betul ialah ${current.answer}.`} ${current.explanation}`;
-    const nextIndex = session.quizIndex + 1;
+    const feedback = isCorrect
+      ? "Betul! Tahniah!"
+      : `Belum tepat. Jawapan yang betul ialah ${correctText}.`;
+    const detail = `${feedback}\n\n${current.explanation}`;
 
-    if (nextIndex >= list.length) {
+    if (session.quizIndex >= list.length - 1) {
       const total = list.length;
       const finalScore = session.quizScore;
       const percentage = Math.round((finalScore / total) * 100);
       const starText = percentage >= 80 ? "★ ★ ★" : percentage >= 60 ? "★ ★" : "★";
       session.state = "topic_selected";
       session.quizTopic = null;
+      session.quizQuestions = [];
       session.quizIndex = 0;
       session.quizScore = 0;
+      session.quizAnswered = false;
+      session.lastAnswer = "";
       return {
         session,
-        reply: `${feedback}\n\nSkor akhir: ${finalScore}/${total}\n\n` +
-          `Ahli: ${starText}\n\nTahniah! Anda telah menamatkan kuiz.\n\nAnda boleh pilih topik lain atau teruskan dengan latihan.`
+        reply: `${detail}\n\nSkor akhir: ${finalScore}/${total}\n\nAhli: ${starText}\n\nTahniah! Anda telah menamatkan kuiz.\n\nAnda boleh pilih topik lain atau teruskan dengan latihan.`
       };
     }
 
-    session.quizIndex = nextIndex;
-    const nextQuestion = list[nextIndex];
     return {
       session,
-      reply: `${feedback}\n\nSoalan seterusnya:\n${nextQuestion.q}\n\nPilihan: A, B, C, D`
+      reply: `${detail}\n\nTekan "Soalan Seterusnya" untuk meneruskan kuiz.`
+    };
+  }
+
+  function nextQuizQuestion(session) {
+    const list = getValidQuizQuestions(session.quizTopic);
+    if (!list.length) {
+      return {
+        session,
+        reply: "Tiada soalan kuiz aktif pada masa ini."
+      };
+    }
+
+    if (!session.quizAnswered) {
+      return {
+        session,
+        reply: "Sila jawab soalan semasa dahulu sebelum meneruskan ke soalan seterusnya."
+      };
+    }
+
+    if (session.quizIndex >= list.length - 1) {
+      const total = list.length;
+      const finalScore = session.quizScore;
+      const percentage = Math.round((finalScore / total) * 100);
+      const starText = percentage >= 80 ? "★ ★ ★" : percentage >= 60 ? "★ ★" : "★";
+      session.state = "topic_selected";
+      session.quizTopic = null;
+      session.quizQuestions = [];
+      session.quizIndex = 0;
+      session.quizScore = 0;
+      session.quizAnswered = false;
+      session.lastAnswer = "";
+      return {
+        session,
+        reply: `Skor akhir: ${finalScore}/${total}\n\nAhli: ${starText}\n\nTahniah! Anda telah menamatkan kuiz.`
+      };
+    }
+
+    session.quizIndex += 1;
+    session.quizAnswered = false;
+    session.lastAnswer = "";
+    const nextQuestion = list[session.quizIndex];
+    return {
+      session,
+      reply: `Soalan ${session.quizIndex + 1} daripada ${list.length}\n\n${nextQuestion.question}\n\nA. ${nextQuestion.options.A}\nB. ${nextQuestion.options.B}\nC. ${nextQuestion.options.C}\nD. ${nextQuestion.options.D}`
     };
   }
 
@@ -521,10 +668,18 @@
       if (/berhenti|stop|henti/.test(norm)) {
         session.state = "idle";
         session.quizTopic = null;
+        session.quizQuestions = [];
         session.quizIndex = 0;
         session.quizScore = 0;
-        return { session, reply: "Kuiz ditamatkan. Anda boleh pilih topik lain atau taip 'menu'." };
+        session.quizAnswered = false;
+        session.lastAnswer = "";
+        return { session, reply: "Kuiz ditamatkan. Anda boleh memilih topik lain atau taip 'menu'." };
       }
+
+      if (/soalan s|seterusnya|next/.test(norm)) {
+        return nextQuizQuestion(session);
+      }
+
       return answerQuiz(session, text);
     }
 
@@ -604,6 +759,10 @@
     KB,
     processMessage,
     createSession,
-    getTopicKeyFromText
+    getTopicKeyFromText,
+    validateQuizQuestion,
+    getValidQuizQuestions,
+    getCurrentQuizQuestion,
+    normalizeQuizQuestion
   };
 })();
