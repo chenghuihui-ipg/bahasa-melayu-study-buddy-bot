@@ -433,7 +433,7 @@
     if (!QUIZZES[key] || !QUIZZES[key].length) {
       return {
         session,
-        reply: `Maaf, kuiz untuk ${KB[key]?.label || "topik ini"} belum tersedia."
+        reply: `Maaf, kuiz untuk ${KB[key]?.label || "topik ini"} belum tersedia.`
       };
     }
 
@@ -483,7 +483,8 @@
 
     if (nextIndex >= list.length) {
       const total = list.length;
-      const percentage = Math.round((session.quizScore / total) * 100);
+      const finalScore = session.quizScore;
+      const percentage = Math.round((finalScore / total) * 100);
       const starText = percentage >= 80 ? "★ ★ ★" : percentage >= 60 ? "★ ★" : "★";
       session.state = "topic_selected";
       session.quizTopic = null;
@@ -491,7 +492,7 @@
       session.quizScore = 0;
       return {
         session,
-        reply: `${feedback}\n\nSkor akhir: ${session.quizScore}/${total} (berdasarkan skor terakhir)\n\n` +
+        reply: `${feedback}\n\nSkor akhir: ${finalScore}/${total}\n\n` +
           `Ahli: ${starText}\n\nTahniah! Anda telah menamatkan kuiz.\n\nAnda boleh pilih topik lain atau teruskan dengan latihan.`
       };
     }
